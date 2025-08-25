@@ -95,6 +95,12 @@
                 width: 100% !important;
             }
             
+            .section-title {
+                font-size: 1.8em !important;
+                margin: 25px 0 !important;
+                text-align: center !important;
+            }
+            
             .level-content {
                 width: 100% !important;
                 margin: 0 !important;
@@ -137,6 +143,12 @@
             .section {
                 padding: 5px 2px !important;
                 width: 100% !important;
+            }
+            
+            .section-title {
+                font-size: 1.6em !important;
+                margin: 20px 0 !important;
+                text-align: center !important;
             }
             
             .footer {
@@ -738,16 +750,15 @@
 
             <!-- LIVELLO 1 - PRATICA -->
             <div id="level-1-practice" class="section">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <h2 class="section-title">Pratica: Esercizi sui semitoni e toni</h2>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <label class="selector-label">Numero di domande:</label>
-                        <select id="question-count-1" class="selector" style="min-width: 100px;">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="15">15</option>
-                        </select>
-                    </div>
+                <h2 class="section-title" style="text-align: center; margin: 30px 0; font-size: 2.2em; color: #f8fafc; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Esercizi sui semitoni e toni</h2>
+                
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <label class="selector-label">Numero di domande:</label>
+                    <select id="question-count-1" class="selector" style="min-width: 100px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
                 </div>
                 
                 <div class="exercise-card">
@@ -896,16 +907,15 @@
 
             <!-- LIVELLO 2 - PRATICA -->
             <div id="level-2-practice" class="section">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <h2 class="section-title">Pratica: Suona le note con alterazioni</h2>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <label class="selector-label">Numero di domande:</label>
-                        <select id="question-count-2" class="selector" style="min-width: 100px;">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="15">15</option>
-                        </select>
-                    </div>
+                <h2 class="section-title" style="text-align: center; margin: 30px 0; font-size: 2.2em; color: #f8fafc; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Suona le note con alterazioni</h2>
+                
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <label class="selector-label">Numero di domande:</label>
+                    <select id="question-count-2" class="selector" style="min-width: 100px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
                 </div>
                 
                 <div class="exercise-card">
@@ -1041,16 +1051,15 @@
 
             <!-- LIVELLO 3 - PRATICA -->
             <div id="level-3-practice" class="section">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <h2 class="section-title">Pratica: Riconosci gli intervalli</h2>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <label class="selector-label">Numero di domande:</label>
-                        <select id="question-count-3" class="selector" style="min-width: 100px;">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="15">15</option>
-                        </select>
-                    </div>
+                <h2 class="section-title" style="text-align: center; margin: 30px 0; font-size: 2.2em; color: #f8fafc; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Riconosci gli intervalli</h2>
+                
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <label class="selector-label">Numero di domande:</label>
+                    <select id="question-count-3" class="selector" style="min-width: 100px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
                 </div>
                 
                 <div class="exercise-card">
@@ -1060,7 +1069,7 @@
                     
                     <div style="background: rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
                         <strong>Istruzioni:</strong> Suona le due note e identifica l'intervallo tra di esse.<br>
-                        
+                        <strong>🎵 Esempi:</strong> Do-Mi = 3° (terza), Do♯-Mi♯ = 3° (terza), Si♭-Re♭ = 3° (terza)
                     </div>
                     
                     <!-- TASTIERA LIVELLO 3 PRATICA - DOPPIA OTTAVA CON DO FINALE -->
@@ -1075,6 +1084,7 @@
                             <div class="key white-key practice-key" style="left: 250px;" data-note="La"></div>
                             <div class="key white-key practice-key" style="left: 300px;" data-note="Si"></div>
                             
+                            <!-- Note con diesis (prima ottava) -->
                             <div class="key black-key practice-key" style="left: 32px;" data-note="Do#"></div>
                             <div class="key black-key practice-key" style="left: 82px;" data-note="Re#"></div>
                             <div class="key black-key practice-key" style="left: 182px;" data-note="Fa#"></div>
@@ -1090,6 +1100,7 @@
                             <div class="key white-key practice-key" style="left: 600px;" data-note="La2"></div>
                             <div class="key white-key practice-key" style="left: 650px;" data-note="Si2"></div>
                             
+                            <!-- Note con diesis (seconda ottava) -->
                             <div class="key black-key practice-key" style="left: 382px;" data-note="Do#2"></div>
                             <div class="key black-key practice-key" style="left: 432px;" data-note="Re#2"></div>
                             <div class="key black-key practice-key" style="left: 532px;" data-note="Fa#2"></div>
@@ -1198,16 +1209,15 @@
 
             <!-- LIVELLO 4 - PRATICA -->
             <div id="level-4-practice" class="section">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <h2 class="section-title">Pratica: Costruisci le scale maggiori</h2>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <label class="selector-label">Numero di domande:</label>
-                        <select id="question-count-4" class="selector" style="min-width: 100px;">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="15">15</option>
-                        </select>
-                    </div>
+                <h2 class="section-title" style="text-align: center; margin: 30px 0; font-size: 2.2em; color: #f8fafc; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Costruisci le scale maggiori</h2>
+                
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <label class="selector-label">Numero di domande:</label>
+                    <select id="question-count-4" class="selector" style="min-width: 100px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
                 </div>
                 
                 <div class="exercise-card">
@@ -1362,16 +1372,15 @@
 
             <!-- LIVELLO 5 - PRATICA -->
             <div id="level-5-practice" class="section">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <h2 class="section-title">Pratica: Riconosci le tonalità</h2>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <label class="selector-label">Numero di domande:</label>
-                        <select id="question-count-5" class="selector" style="min-width: 100px;">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="15">15</option>
-                        </select>
-                    </div>
+                <h2 class="section-title" style="text-align: center; margin: 30px 0; font-size: 2.2em; color: #f8fafc; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Riconosci le tonalità</h2>
+                
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <label class="selector-label">Numero di domande:</label>
+                    <select id="question-count-5" class="selector" style="min-width: 100px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
                 </div>
                 
                 <div class="exercise-card">
@@ -1523,16 +1532,15 @@
 
             <!-- LIVELLO 6 - PRATICA -->
             <div id="level-6-practice" class="section">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                    <h2 class="section-title">Pratica: Riconosci le tonalità enarmoniche</h2>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <label class="selector-label">Numero di domande:</label>
-                        <select id="question-count-6" class="selector" style="min-width: 100px;">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="15">15</option>
-                        </select>
-                    </div>
+                <h2 class="section-title" style="text-align: center; margin: 30px 0; font-size: 2.2em; color: #f8fafc; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Riconosci le tonalità enarmoniche</h2>
+                
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <label class="selector-label">Numero di domande:</label>
+                    <select id="question-count-6" class="selector" style="min-width: 100px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="15">15</option>
+                    </select>
                 </div>
                 
                 <div class="exercise-card">

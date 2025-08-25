@@ -58,23 +58,22 @@ var noteFrequencies = {
     'Fa♭': 329.63, 'Sol♭': 369.99, 'Do♭': 277.18
 };
 
-// Scale maggiori
+// Scale maggiori - solo quelle richieste per il livello 4
 var majorScales = {
     'Do': ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do'],
     'Sol': ['Sol', 'La', 'Si', 'Do', 'Re', 'Mi', 'Fa#', 'Sol'],
-    'Fa': ['Fa', 'Sol', 'La', 'Si♭', 'Do', 'Re', 'Mi', 'Fa'],
     'Re': ['Re', 'Mi', 'Fa#', 'Sol', 'La', 'Si', 'Do#', 'Re'],
+    'Fa': ['Fa', 'Sol', 'La', 'Si♭', 'Do', 'Re', 'Mi', 'Fa'],
+    'Si♭': ['Si♭', 'Do', 'Re', 'Mi♭', 'Fa', 'Sol', 'La', 'Si♭'],
     'La': ['La', 'Si', 'Do#', 'Re', 'Mi', 'Fa#', 'Sol#', 'La'],
     'Mi': ['Mi', 'Fa#', 'Sol#', 'La', 'Si', 'Do#', 'Re#', 'Mi'],
     'Si': ['Si', 'Do#', 'Re#', 'Mi', 'Fa#', 'Sol#', 'La#', 'Si'],
-    'Fa#': ['Fa#', 'Sol#', 'La#', 'Si', 'Do#', 'Re#', 'Mi#', 'Fa#'],
-    'Do#': ['Do#', 'Re#', 'Mi#', 'Fa#', 'Sol#', 'La#', 'Si#', 'Do#'],
-    'Si♭': ['Si♭', 'Do', 'Re', 'Mi♭', 'Fa', 'Sol', 'La', 'Si♭'],
     'Mi♭': ['Mi♭', 'Fa', 'Sol', 'La♭', 'Si♭', 'Do', 'Re', 'Mi♭'],
     'La♭': ['La♭', 'Si♭', 'Do', 'Re♭', 'Mi♭', 'Fa', 'Sol', 'La♭'],
     'Re♭': ['Re♭', 'Mi♭', 'Fa', 'Sol♭', 'La♭', 'Si♭', 'Do', 'Re♭'],
-    'Sol♭': ['Sol♭', 'La♭', 'Si♭', 'Do♭', 'Re♭', 'Mi♭', 'Fa', 'Sol♭'],
-    'Do♭': ['Do♭', 'Re♭', 'Mi♭', 'Fa♭', 'Sol♭', 'La♭', 'Si♭', 'Do♭']
+    'Do#': ['Do#', 'Re#', 'Mi#', 'Fa#', 'Sol#', 'La#', 'Si#', 'Do#'],
+    'Fa#': ['Fa#', 'Sol#', 'La#', 'Si', 'Do#', 'Re#', 'Mi#', 'Fa#'],
+    'Sol♭': ['Sol♭', 'La♭', 'Si♭', 'Do♭', 'Re♭', 'Mi♭', 'Fa', 'Sol♭']
 };
 
 // Tonalità e alterazioni in chiave per il livello 5
@@ -230,25 +229,265 @@ function handleKeyClick(element) {
     }
 }
 
-// Gestione note per le scale (livello 3)
+// Normalizzazione note enarmoniche
+function normalizeOctave(note) {
+    // Normalizza solo le ottave (rimuove SOLO i numeri, mantiene ♭ e ♯)
+    var noteWithoutOctave = note.replace(/[0-9]/g, '');
+    
+    console.log('Nota originale:', note, '-> Nota senza ottava:', noteWithoutOctave);
+    console.log('Simboli ♭ e ♯ preservati:', noteWithoutOctave.includes('♭') || noteWithoutOctave.includes('♯'));
+    
+    return noteWithoutOctave;
+}
+
+// Funzione per ottenere l'equivalente enarmonico di una nota
+function getEnharmonicEquivalent(note) {
+    var enharmonicMap = {
+        'La♭': 'Sol#',
+        'Si♭': 'La#',
+        'Do♭': 'Si',
+        'Re♭': 'Do#',
+        'Mi♭': 'Re#',
+        'Fa♭': 'Mi',
+        'Sol♭': 'Fa#'
+    };
+    
+    return enharmonicMap[note] || note;
+}
+
+// Funzione per ottenere le note accettate per ogni scala specifica
+function getAcceptedNotesForScale(scaleName) {
+    var scaleNoteMap = {
+        // Scale senza alterazioni
+        'Do': {
+            'Do': ['Do'], 'Re': ['Re'], 'Mi': ['Mi'], 'Fa': ['Fa'], 
+            'Sol': ['Sol'], 'La': ['La'], 'Si': ['Si']
+        },
+        
+        // Scale con diesis - accetta solo diesis
+        'Sol': {
+            'Sol': ['Sol'], 'La': ['La'], 'Si': ['Si'], 'Do': ['Do'], 
+            'Re': ['Re'], 'Mi': ['Mi'], 'Fa#': ['Fa#']
+        },
+        'Re': {
+            'Re': ['Re'], 'Mi': ['Mi'], 'Fa#': ['Fa#'], 'Sol': ['Sol'], 
+            'La': ['La'], 'Si': ['Si'], 'Do#': ['Do#']
+        },
+        'Fa#': {
+            'Fa#': ['Fa#'], 'Sol#': ['Sol#'], 'La#': ['La#'], 'Si': ['Si'], 
+            'Do#': ['Do#'], 'Re#': ['Re#'], 'Mi#': ['Mi#', 'Fa']
+        },
+        'Do#': {
+            'Do#': ['Do#'], 'Re#': ['Re#'], 'Mi#': ['Fa'], 'Fa#': ['Fa#'], 
+            'Sol#': ['Sol#'], 'La#': ['La#'], 'Si#': ['Do']
+        },
+        'Sol#': {
+            'Sol#': ['Sol#'], 'La#': ['La#'], 'Si': ['Si'], 'Do#': ['Do#'], 
+            'Re#': ['Re#'], 'Mi#': ['Fa'], 'Fa#': ['Fa#']
+        },
+        
+        // Scale con bemolli - accetta sia bemolli che equivalenti diesis
+        'Fa': {
+            'Fa': ['Fa'], 'Sol': ['Sol'], 'La': ['La'], 'Si♭': ['Si♭', 'La#'], 
+            'Do': ['Do'], 'Re': ['Re'], 'Mi': ['Mi']
+        },
+        'Si♭': {
+            'Si♭': ['Si♭', 'La#'], 'Do': ['Do'], 'Re': ['Re'], 'Mi♭': ['Mi♭', 'Re#'], 
+            'Fa': ['Fa'], 'Sol': ['Sol'], 'La': ['La']
+        },
+        'Mi♭': {
+            'Mi♭': ['Mi♭', 'Re#'], 'Fa': ['Fa'], 'Sol': ['Sol'], 'La♭': ['La♭', 'Sol#'], 
+            'Si♭': ['Si♭', 'La#'], 'Do': ['Do'], 'Re': ['Re']
+        },
+        'La♭': {
+            'La♭': ['La♭', 'Sol#'], 'Si♭': ['Si♭', 'La#'], 'Do': ['Do'], 'Re♭': ['Re♭', 'Do#'], 
+            'Mi♭': ['Mi♭', 'Re#'], 'Fa': ['Fa'], 'Sol': ['Sol']
+        },
+        'Re♭': {
+            'Re♭': ['Re♭', 'Do#'], 'Mi♭': ['Mi♭', 'Re#'], 'Fa': ['Fa'], 'Sol♭': ['Sol♭', 'Fa#'], 
+            'La♭': ['La♭', 'Sol#'], 'Si♭': ['Si♭', 'La#'], 'Do': ['Do']
+        },
+        'Sol♭': {
+            'Sol♭': ['Sol♭', 'Fa#'], 'La♭': ['La♭', 'Sol#'], 'Si♭': ['Si♭', 'La#'], 'Do♭': ['Do♭', 'Si'], 
+            'Re♭': ['Re♭', 'Do#'], 'Mi♭': ['Mi♭', 'Re#'], 'Fa': ['Fa']
+        },
+        
+        // Scale con diesis - accetta solo diesis
+        'La': {
+            'La': ['La'], 'Si': ['Si'], 'Do#': ['Do#'], 'Re': ['Re'], 
+            'Mi': ['Mi'], 'Fa#': ['Fa#'], 'Sol#': ['Sol#']
+        },
+        'Mi': {
+            'Mi': ['Mi'], 'Fa#': ['Fa#'], 'Sol#': ['Sol#'], 'La': ['La'], 
+            'Si': ['Si'], 'Do#': ['Do#'], 'Re#': ['Re#']
+        },
+        'Si': {
+            'Si': ['Si'], 'Do#': ['Do#'], 'Re#': ['Re#'], 'Mi': ['Mi'], 
+            'Fa#': ['Fa#'], 'Sol#': ['Sol#'], 'La#': ['La#']
+        }
+    };
+    
+    return scaleNoteMap[scaleName] || null;
+}
+
+// Funzione per ottenere il nome della scala corrente
+function getCurrentScaleName() {
+    var questionElement = document.getElementById('question-4');
+    if (questionElement) {
+        var questionText = questionElement.textContent;
+        var scaleMatch = questionText.match(/Suona la scala di (.+?) maggiore/);
+        if (scaleMatch && scaleMatch[1]) {
+            return scaleMatch[1];
+        }
+    }
+    return null;
+}
+
+// Funzione per convertire le note enarmoniche per la visualizzazione
+function convertNoteForDisplay(note, scaleName) {
+    // Mappa delle note enarmoniche per le scale con bemolli
+    var flatScaleMap = {
+        'La♭': {
+            'Sol#': 'La♭',
+            'La#': 'Si♭',
+            'Do#': 'Re♭',
+            'Re#': 'Mi♭'
+        },
+        'Si♭': {
+            'La#': 'Si♭',
+            'Re#': 'Mi♭'
+        },
+        'Mi♭': {
+            'Re#': 'Mi♭',
+            'Sol#': 'La♭',
+            'La#': 'Si♭'
+        },
+        'Re♭': {
+            'Do#': 'Re♭',
+            'Re#': 'Mi♭',
+            'Fa#': 'Sol♭',
+            'Sol#': 'La♭',
+            'La#': 'Si♭'
+        },
+        'Sol♭': {
+            'Fa#': 'Sol♭',
+            'Sol#': 'La♭',
+            'La#': 'Si♭',
+            'Si': 'Do♭',
+            'Do#': 'Re♭',
+            'Re#': 'Mi♭'
+        }
+    };
+    
+    // Mappa delle note enarmoniche per le scale con diesis
+    var sharpScaleMap = {
+        'Fa#': {
+            'Fa': 'Mi#'
+        },
+        'Do#': {
+            'Fa': 'Mi#',
+            'Do': 'Si#'
+        },
+        'Sol#': {
+            'Fa': 'Mi#'
+        }
+    };
+    
+    // Se è una scala con bemolli, converte la nota
+    if (flatScaleMap[scaleName] && flatScaleMap[scaleName][note]) {
+        return flatScaleMap[scaleName][note];
+    }
+    
+    // Se è una scala con diesis, converte la nota
+    if (sharpScaleMap[scaleName] && sharpScaleMap[scaleName][note]) {
+        return sharpScaleMap[scaleName][note];
+    }
+    
+    // Altrimenti lascia la nota originale
+    return note;
+}
+
+// Gestione note per le scale (livello 4) - solo normalizzazione ottave
 function handleScaleNote(note) {
-    // Converte Si♭ in La# per confronto
-    var normalizedNote = note === 'La#' && expectedScale.indexOf('Si♭') !== -1 ? 'Si♭' : note;
+    console.log('handleScaleNote chiamata con nota:', note);
+    console.log('expectedScale:', expectedScale);
+    console.log('currentLevel:', currentLevel);
+    
+    // Verifica che siamo nel livello 4 e che expectedScale sia definita
+    if (currentLevel !== 4 || !expectedScale || expectedScale.length === 0) {
+        console.log('Errore: livello sbagliato o scala non definita');
+        return;
+    }
+    
+    // Normalizza solo le ottave (rimuove i numeri)
+    var normalizedNote = normalizeOctave(note);
+    
+    console.log('Nota normalizzata:', normalizedNote);
+    console.log('Note già suonate:', playedNotes);
     
     playedNotes.push(normalizedNote);
     updatePlayedNotesDisplay();
     
     // Controlla se la nota è corretta nella posizione attuale
     var currentPosition = playedNotes.length - 1;
-    if (normalizedNote === expectedScale[currentPosition]) {
+    var expectedNote = expectedScale[currentPosition];
+    console.log('Posizione corrente:', currentPosition);
+    console.log('Nota attesa:', expectedNote);
+    
+    // Riconoscimento specifico per scala - ogni scala accetta solo le sue note specifiche
+    var noteToCheck = normalizedNote;
+    var currentScaleName = getCurrentScaleName();
+    var acceptedNotes = getAcceptedNotesForScale(currentScaleName);
+    
+    console.log('🎵 RICONOSCIMENTO SPECIFICO PER SCALA:');
+    console.log('Scala corrente:', currentScaleName);
+    console.log('Nota attesa:', expectedNote);
+    console.log('Nota suonata:', noteToCheck);
+    
+    if (acceptedNotes && acceptedNotes[expectedNote]) {
+        var allowedNotes = acceptedNotes[expectedNote];
+        console.log('Note permesse per', expectedNote, ':', allowedNotes);
+        
+        if (allowedNotes.includes(noteToCheck)) {
+            console.log('✅ Nota accettata per questa scala!', noteToCheck, '=', expectedNote);
+            noteToCheck = expectedNote; // Usa la nota attesa per il confronto
+        } else {
+            console.log('❌ Nota non permessa per questa scala:', noteToCheck);
+        }
+    } else {
+        console.log('⚠️ Scala non mappata, uso confronto diretto');
+    }
+    
+    // Controlla se la nota è corretta
+    console.log('=== CONFRONTO NOTE ===');
+    console.log('normalizedNote (suonata):', normalizedNote);
+    console.log('expectedNote (attesa):', expectedNote);
+    console.log('noteToCheck (per confronto):', noteToCheck);
+    console.log('Confronto esatto:', noteToCheck === expectedNote);
+    console.log('Tipo normalizedNote:', typeof normalizedNote);
+    console.log('Tipo expectedNote:', typeof expectedNote);
+    console.log('Lunghezza normalizedNote:', normalizedNote.length);
+    console.log('Lunghezza expectedNote:', expectedNote.length);
+    console.log('======================');
+    
+    if (noteToCheck === expectedNote) {
+        console.log('Nota corretta!');
         // Nota corretta
+        console.log('Controllo completamento scala:');
+        console.log('playedNotes.length:', playedNotes.length);
+        console.log('expectedScale.length:', expectedScale.length);
+        console.log('playedNotes:', playedNotes);
+        console.log('expectedScale:', expectedScale);
+        
         if (playedNotes.length === expectedScale.length) {
+            console.log('SCALA COMPLETATA! 🎉');
             // Scala completata correttamente
             exerciseScore++;
             exerciseCount++;
             var feedback = document.getElementById('feedback-4');
             feedback.textContent = 'Scala corretta! (' + exerciseCount + '/' + exerciseTotal + ')';
             feedback.className = 'feedback correct';
+            feedback.style.display = 'block';
             
             if (exerciseCount >= exerciseTotal) {
                 setTimeout(function() {
@@ -266,8 +505,11 @@ function handleScaleNote(note) {
                     playButton.disabled = false;
                 }
             }
+        } else {
+            console.log('Scala non ancora completata, continua...');
         }
     } else {
+        console.log('Nota sbagliata!');
         // Nota sbagliata
         exerciseCount++;
         
@@ -281,7 +523,7 @@ function handleScaleNote(note) {
         }
         
         var feedback = document.getElementById('feedback-4');
-        feedback.textContent = 'Errore! Nota sbagliata: ' + normalizedNote + '. (' + exerciseCount + '/' + exerciseTotal + ')';
+        feedback.textContent = 'Errore! Nota sbagliata: ' + normalizedNote + '. Nota attesa: ' + expectedNote + '. (' + exerciseCount + '/' + exerciseTotal + ')';
         feedback.className = 'feedback incorrect';
         
         if (exerciseCount >= exerciseTotal) {
@@ -307,17 +549,33 @@ function handleScaleNote(note) {
 function updatePlayedNotesDisplay() {
     var display = document.getElementById('played-notes-4');
     if (display) {
-        display.textContent = playedNotes.join(' - ');
+        if (playedNotes.length === 0) {
+            display.textContent = '-';
+        } else {
+            // Ottieni il nome della scala corrente
+            var currentScale = getCurrentScaleName();
+            
+            // Converti le note per la visualizzazione
+            var displayNotes = playedNotes.map(function(note) {
+                return convertNoteForDisplay(note, currentScale);
+            });
+            
+            display.textContent = displayNotes.join(' - ');
+        }
     }
 }
 
 // Reset scala corrente
 function resetCurrentScale() {
+    console.log('Reset scala corrente chiamato');
+    console.log('playedNotes prima del reset:', playedNotes);
     playedNotes = [];
+    console.log('playedNotes dopo il reset:', playedNotes);
     updatePlayedNotesDisplay();
     var feedback = document.getElementById('feedback-4');
     if (feedback) {
         feedback.className = 'feedback';
+        feedback.style.display = 'none';
     }
 }
 
@@ -579,6 +837,11 @@ function generateNextScaleQuestion() {
     usedQuestions[4].push(randomScale);
     
     expectedScale = majorScales[randomScale];
+    
+    console.log('Nuova scala generata:');
+    console.log('Nome scala:', randomScale);
+    console.log('expectedScale:', expectedScale);
+    console.log('Lunghezza scala:', expectedScale.length);
     
     var questionElement = document.getElementById('question-4');
     questionElement.textContent = 'Suona la scala di ' + randomScale + ' maggiore (' + exerciseCount + '/' + exerciseTotal + ')';
@@ -1206,6 +1469,7 @@ function generateNextQuestionLevel2() {
 // Generazione domanda intervalli (livello 3)
 function generateNextIntervalQuestion() {
     var intervals = [
+        // Intervalli da Do (base)
         { question: 'Qual è l\'intervallo da Do a Re?', answer: '2', note1: 'Do', note2: 'Re' },
         { question: 'Qual è l\'intervallo da Do a Mi?', answer: '3', note1: 'Do', note2: 'Mi' },
         { question: 'Qual è l\'intervallo da Do a Fa?', answer: '4', note1: 'Do', note2: 'Fa' },
@@ -1213,27 +1477,67 @@ function generateNextIntervalQuestion() {
         { question: 'Qual è l\'intervallo da Do a La?', answer: '6', note1: 'Do', note2: 'La' },
         { question: 'Qual è l\'intervallo da Do a Si?', answer: '7', note1: 'Do', note2: 'Si' },
         { question: 'Qual è l\'intervallo da Do a Do?', answer: '8', note1: 'Do', note2: 'Do' },
+        
+        // Intervalli da Do# (diesis)
+        { question: 'Qual è l\'intervallo da Do♯ a Re♯?', answer: '2', note1: 'Do#', note2: 'Re#' },
+        { question: 'Qual è l\'intervallo da Do♯ a Fa♯?', answer: '4', note1: 'Do#', note2: 'Fa#' },
+        { question: 'Qual è l\'intervallo da Do♯ a Sol♯?', answer: '5', note1: 'Do#', note2: 'Sol#' },
+        { question: 'Qual è l\'intervallo da Do♯ a La♯?', answer: '6', note1: 'Do#', note2: 'La#' },
+        
+        // Intervalli da Re (base)
         { question: 'Qual è l\'intervallo da Re a Mi?', answer: '2', note1: 'Re', note2: 'Mi' },
         { question: 'Qual è l\'intervallo da Re a Fa?', answer: '3', note1: 'Re', note2: 'Fa' },
         { question: 'Qual è l\'intervallo da Re a Sol?', answer: '4', note1: 'Re', note2: 'Sol' },
         { question: 'Qual è l\'intervallo da Re a La?', answer: '5', note1: 'Re', note2: 'La' },
         { question: 'Qual è l\'intervallo da Re a Si?', answer: '6', note1: 'Re', note2: 'Si' },
         { question: 'Qual è l\'intervallo da Re a Do?', answer: '7', note1: 'Re', note2: 'Do' },
+        
+        // Intervalli da Re# (diesis)
+        { question: 'Qual è l\'intervallo da Re♯ a Fa♯?', answer: '3', note1: 'Re#', note2: 'Fa#' },
+        { question: 'Qual è l\'intervallo da Re♯ a Sol♯?', answer: '4', note1: 'Re#', note2: 'Sol#' },
+        { question: 'Qual è l\'intervallo da Re♯ a La♯?', answer: '5', note1: 'Re#', note2: 'La#' },
+        
+        // Intervalli da Mi (base)
         { question: 'Qual è l\'intervallo da Mi a Fa?', answer: '2', note1: 'Mi', note2: 'Fa' },
         { question: 'Qual è l\'intervallo da Mi a Sol?', answer: '3', note1: 'Mi', note2: 'Sol' },
         { question: 'Qual è l\'intervallo da Mi a La?', answer: '4', note1: 'Mi', note2: 'La' },
         { question: 'Qual è l\'intervallo da Mi a Si?', answer: '5', note1: 'Mi', note2: 'Si' },
         { question: 'Qual è l\'intervallo da Mi a Do?', answer: '6', note1: 'Mi', note2: 'Do' },
+        
+        // Intervalli da Fa (base)
         { question: 'Qual è l\'intervallo da Fa a Sol?', answer: '2', note1: 'Fa', note2: 'Sol' },
         { question: 'Qual è l\'intervallo da Fa a La?', answer: '3', note1: 'Fa', note2: 'La' },
         { question: 'Qual è l\'intervallo da Fa a Si?', answer: '4', note1: 'Fa', note2: 'Si' },
         { question: 'Qual è l\'intervallo da Fa a Do?', answer: '5', note1: 'Fa', note2: 'Do' },
+        
+        // Intervalli da Fa# (diesis)
+        { question: 'Qual è l\'intervallo da Fa♯ a Sol♯?', answer: '2', note1: 'Fa#', note2: 'Sol#' },
+        { question: 'Qual è l\'intervallo da Fa♯ a La♯?', answer: '3', note1: 'Fa#', note2: 'La#' },
+        
+        // Intervalli da Sol (base)
         { question: 'Qual è l\'intervallo da Sol a La?', answer: '2', note1: 'Sol', note2: 'La' },
         { question: 'Qual è l\'intervallo da Sol a Si?', answer: '3', note1: 'Sol', note2: 'Si' },
         { question: 'Qual è l\'intervallo da Sol a Do?', answer: '4', note1: 'Sol', note2: 'Do' },
+        
+        // Intervalli da Sol# (diesis)
+        { question: 'Qual è l\'intervallo da Sol♯ a La♯?', answer: '2', note1: 'Sol#', note2: 'La#' },
+        
+        // Intervalli da La (base)
         { question: 'Qual è l\'intervallo da La a Si?', answer: '2', note1: 'La', note2: 'Si' },
         { question: 'Qual è l\'intervallo da La a Do?', answer: '3', note1: 'La', note2: 'Do' },
-        { question: 'Qual è l\'intervallo da Si a Do?', answer: '2', note1: 'Si', note2: 'Do' }
+        
+        // Intervalli da La# (diesis)
+        { question: 'Qual è l\'intervallo da La♯ a Do?', answer: '3', note1: 'La#', note2: 'Do' },
+        
+        // Intervalli da Si (base)
+        { question: 'Qual è l\'intervallo da Si a Do?', answer: '2', note1: 'Si', note2: 'Do' },
+        
+        // Intervalli con bemolli (esempi)
+        { question: 'Qual è l\'intervallo da Si♭ a Do?', answer: '2', note1: 'Si♭', note2: 'Do' },
+        { question: 'Qual è l\'intervallo da Mi♭ a Fa?', answer: '2', note1: 'Mi♭', note2: 'Fa' },
+        { question: 'Qual è l\'intervallo da La♭ a Si♭?', answer: '2', note1: 'La♭', note2: 'Si♭' },
+        { question: 'Qual è l\'intervallo da Re♭ a Mi♭?', answer: '2', note1: 'Re♭', note2: 'Mi♭' },
+        { question: 'Qual è l\'intervallo da Sol♭ a La♭?', answer: '2', note1: 'Sol♭', note2: 'La♭' }
     ];
     
     // Prima controlla se ci sono domande sbagliate da riproporre
