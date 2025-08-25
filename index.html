@@ -1059,8 +1059,8 @@
                     <div id="question-3" style="margin: 20px 0; font-size: 18px; font-weight: bold; color: #e5e7eb;">Clicca "Gioca" per iniziare!</div>
                     
                     <div style="background: rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 10px; margin: 20px 0;">
-                        <strong>Istruzioni:</strong> Ascolta le due note e identifica l'intervallo tra di esse.<br>
-                        <small>Es. Se senti Do e poi Mi, la risposta è "3° (terza)"</small>
+                        <strong>Istruzioni:</strong> Suona le due note e identifica l'intervallo tra di esse.<br>
+                        
                     </div>
                     
                     <!-- TASTIERA LIVELLO 3 PRATICA - DOPPIA OTTAVA CON DO FINALE -->
@@ -1321,13 +1321,10 @@
                     </div>
                 </div>
 
+                <!-- TASTIERA LIVELLO 5 TEORIA - DOPPIA OTTAVA CON DO FINALE -->
                 <div style="display: flex; flex-direction: column; align-items: center; margin: 35px 0; position: relative;">
-                    <div class="volume-control">
-                        <span class="volume-label">Volume:</span>
-                        <input type="range" class="volume-slider" min="0" max="100" value="70">
-                        <button class="mute-btn">🔊</button>
-                    </div>
-                    <div style="position: relative; height: 220px; width: 380px; padding: 20px;">
+                    <div style="position: relative; height: 220px; width: 810px; padding: 20px;">
+                        <!-- Prima ottava -->
                         <div class="key white-key" style="left: 0px;" data-note="Do"></div>
                         <div class="key white-key" style="left: 50px;" data-note="Re"></div>
                         <div class="key white-key" style="left: 100px;" data-note="Mi"></div>
@@ -1341,6 +1338,24 @@
                         <div class="key black-key" style="left: 182px;" data-note="Fa#"></div>
                         <div class="key black-key" style="left: 232px;" data-note="Sol#"></div>
                         <div class="key black-key" style="left: 282px;" data-note="La#"></div>
+                        
+                        <!-- Seconda ottava -->
+                        <div class="key white-key" style="left: 350px;" data-note="Do2"></div>
+                        <div class="key white-key" style="left: 400px;" data-note="Re2"></div>
+                        <div class="key white-key" style="left: 450px;" data-note="Mi2"></div>
+                        <div class="key white-key" style="left: 500px;" data-note="Fa2"></div>
+                        <div class="key white-key" style="left: 550px;" data-note="Sol2"></div>
+                        <div class="key white-key" style="left: 600px;" data-note="La2"></div>
+                        <div class="key white-key" style="left: 650px;" data-note="Si2"></div>
+                        
+                        <div class="key black-key" style="left: 382px;" data-note="Do#2"></div>
+                        <div class="key black-key" style="left: 432px;" data-note="Re#2"></div>
+                        <div class="key black-key" style="left: 532px;" data-note="Fa#2"></div>
+                        <div class="key black-key" style="left: 582px;" data-note="Sol#2"></div>
+                        <div class="key black-key" style="left: 632px;" data-note="La#2"></div>
+                        
+                        <!-- Do finale (terza ottava) -->
+                        <div class="key white-key" style="left: 700px;" data-note="Do3"></div>
                     </div>
                 </div>
             </div>
