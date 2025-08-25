@@ -76,7 +76,7 @@ var majorScales = {
     'Sol♭': ['Sol♭', 'La♭', 'Si♭', 'Do♭', 'Re♭', 'Mi♭', 'Fa', 'Sol♭']
 };
 
-// Tonalità e alterazioni in chiave per il livello 5
+// Tonalità e alterazioni in chiave per il livello 5 - SOLO quelle del livello 4
 var keySignatures = {
     'Do maggiore': { alterations: 'nessuna alterazione', sharps: 0, flats: 0, notes: [] },
     'Sol maggiore': { alterations: '1 diesis: Fa#', sharps: 1, flats: 0, notes: ['Fa#'] },
@@ -91,8 +91,7 @@ var keySignatures = {
     'Mi♭ maggiore': { alterations: '3 bemolli: Si♭, Mi♭, La♭', sharps: 0, flats: 3, notes: ['Si♭', 'Mi♭', 'La♭'] },
     'La♭ maggiore': { alterations: '4 bemolli: Si♭, Mi♭, La♭, Re♭', sharps: 0, flats: 4, notes: ['Si♭', 'Mi♭', 'La♭', 'Re♭'] },
     'Re♭ maggiore': { alterations: '5 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭', sharps: 0, flats: 5, notes: ['Si♭', 'Mi♭', 'La♭', 'Re♭', 'Sol♭'] },
-    'Sol♭ maggiore': { alterations: '6 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭', sharps: 0, flats: 6, notes: ['Si♭', 'Mi♭', 'La♭', 'Re♭', 'Sol♭', 'Do♭'] },
-    'Do♭ maggiore': { alterations: '7 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭, Fa♭', sharps: 0, flats: 7, notes: ['Si♭', 'Mi♭', 'La♭', 'Re♭', 'Sol♭', 'Do♭', 'Fa♭'] }
+    'Sol♭ maggiore': { alterations: '6 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭', sharps: 0, flats: 6, notes: ['Si♭', 'Mi♭', 'La♭', 'Re♭', 'Sol♭', 'Do♭'] }
 };
 
 // Tonalità enarmoniche per il livello 6
@@ -581,15 +580,19 @@ function resetCurrentScale() {
 
 // Generazione domanda tonalità (livello 5)
 function generateNextTonalityQuestion() {
+    console.log('🔄 generateNextTonalityQuestion chiamata');
     var tonalityNames = Object.keys(keySignatures);
+    console.log('Tonalità disponibili:', tonalityNames);
     
     // Prima controlla se ci sono tonalità sbagliate da riproporre
     if (wrongQuestions[5].length > 0) {
+        console.log('📝 Riproponendo tonalità sbagliata');
         var wrongQuestion = wrongQuestions[5].shift(); // Prendi e rimuovi la prima tonalità sbagliata
         var tonalityInfo = keySignatures[wrongQuestion.question];
         
         // Legge la modalità selezionata dall'utente
         var gameMode = document.getElementById('game-mode-5').value;
+        console.log('Modalità gioco:', gameMode);
         
         var questionElement = document.getElementById('question-5');
         var tonalityDisplay = document.getElementById('tonality-display-5');
@@ -605,6 +608,7 @@ function generateNextTonalityQuestion() {
             currentAnswer = tonalityInfo.alterations;
             
             // Mostra solo le opzioni di alterazioni
+            console.log('🎯 Mostrando opzioni alterazioni');
             showAlterationsOptions();
         } else {
             // Modalità B: date le alterazioni, trova la tonalità  
@@ -614,11 +618,13 @@ function generateNextTonalityQuestion() {
             currentAnswer = wrongQuestion.question;
             
             // Mostra solo le opzioni di tonalità
+            console.log('🎯 Mostrando opzioni tonalità');
             showTonalityOptions();
         }
         
         tonalityInfo5.style.display = 'block';
         answerButtons.style.display = 'block';
+        console.log('✅ Pulsanti mostrati per RIPROVA');
         return;
     }
     
@@ -633,21 +639,24 @@ function generateNextTonalityQuestion() {
             availableTonalities = tonalityNames;
         }
         
-        var randomTonality = availableTonalities[Math.floor(Math.random() * availableTonalities.length)];
-        
-        // Aggiungi la tonalità all'array delle tonalità usate
-        usedQuestions[5].push(randomTonality);
-        
-        var tonalityInfo = keySignatures[randomTonality];
-        
-        // Legge la modalità selezionata dall'utente
-        var gameMode = document.getElementById('game-mode-5').value;
-        
-        var questionElement = document.getElementById('question-5');
-        var tonalityDisplay = document.getElementById('tonality-display-5');
-        var alterationsDisplay = document.getElementById('alterations-display-5');
-        var tonalityInfo5 = document.getElementById('tonality-info-5');
-        var answerButtons = document.getElementById('answer-buttons-5');
+            var randomTonality = availableTonalities[Math.floor(Math.random() * availableTonalities.length)];
+    console.log('🎲 Tonalità selezionata:', randomTonality);
+    
+    // Aggiungi la tonalità all'array delle tonalità usate
+    usedQuestions[5].push(randomTonality);
+    
+    var tonalityInfo = keySignatures[randomTonality];
+    console.log('📋 Info tonalità:', tonalityInfo);
+    
+    // Legge la modalità selezionata dall'utente
+    var gameMode = document.getElementById('game-mode-5').value;
+    console.log('🎮 Modalità gioco:', gameMode);
+    
+    var questionElement = document.getElementById('question-5');
+    var tonalityDisplay = document.getElementById('tonality-display-5');
+    var alterationsDisplay = document.getElementById('alterations-display-5');
+    var tonalityInfo5 = document.getElementById('tonality-info-5');
+    var answerButtons = document.getElementById('answer-buttons-5');
     
     if (gameMode === 'tonality-to-alterations') {
         // Modalità A: data la tonalità, trova le alterazioni
@@ -655,8 +664,10 @@ function generateNextTonalityQuestion() {
         tonalityDisplay.textContent = randomTonality;
         alterationsDisplay.textContent = 'Clicca la risposta corretta sotto';
         currentAnswer = tonalityInfo.alterations;
+        console.log('🎯 Modalità A - Risposta corretta:', currentAnswer);
         
         // Mostra solo le opzioni di alterazioni
+        console.log('🎯 Mostrando opzioni alterazioni');
         showAlterationsOptions();
     } else {
         // Modalità B: date le alterazioni, trova la tonalità  
@@ -664,13 +675,16 @@ function generateNextTonalityQuestion() {
         tonalityDisplay.textContent = tonalityInfo.alterations;
         alterationsDisplay.textContent = 'Clicca la tonalità corretta sotto';
         currentAnswer = randomTonality;
+        console.log('🎯 Modalità B - Risposta corretta:', currentAnswer);
         
         // Mostra solo le opzioni di tonalità
+        console.log('🎯 Mostrando opzioni tonalità');
         showTonalityOptions();
     }
     
-    tonalityInfo4.style.display = 'block';
+    tonalityInfo5.style.display = 'block';
     answerButtons.style.display = 'block';
+    console.log('✅ Pulsanti mostrati per nuova domanda');
 }
 
 // Mostra opzioni per le alterazioni (Modalità A)
@@ -707,7 +721,7 @@ function showAlterationsOptions() {
     }
 }
 
-// Mostra opzioni per le tonalità (Modalità B)
+// Mostra opzioni per le tonalità (Modalità B) - SOLO quelle del livello 4
 function showTonalityOptions() {
     var answerButtons = document.getElementById('answer-buttons-5');
     answerButtons.innerHTML = `
@@ -724,7 +738,6 @@ function showTonalityOptions() {
             <button class="btn answer-btn" data-answer="La♭ maggiore" style="font-size: 14px; padding: 8px 12px;">La♭ maggiore</button>
             <button class="btn answer-btn" data-answer="Re♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Re♭ maggiore</button>
             <button class="btn answer-btn" data-answer="Sol♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Sol♭ maggiore</button>
-            <button class="btn answer-btn" data-answer="Do♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Do♭ maggiore</button>
             <button class="btn answer-btn" data-answer="Fa# maggiore" style="font-size: 14px; padding: 8px 12px;">Fa# maggiore</button>
             <button class="btn answer-btn" data-answer="Do# maggiore" style="font-size: 14px; padding: 8px 12px;">Do# maggiore</button>
         </div>
