@@ -750,7 +750,57 @@ function checkAnswer(answer) {
     var feedbackId = 'feedback-' + currentLevel;
     var feedback = document.getElementById(feedbackId);
     
-    if (answer === currentAnswer) {
+    // Debug per capire cosa sta succedendo
+    console.log('DEBUG - Livello:', currentLevel);
+    console.log('DEBUG - Nota cliccata:', answer);
+    console.log('DEBUG - Risposta attesa:', currentAnswer);
+    
+    // Per il livello 2 (alterazioni), normalizza le note per il confronto
+    var normalizedAnswer = answer;
+    var normalizedCurrentAnswer = currentAnswer;
+    
+    if (currentLevel === 1 || currentLevel === 2 || currentLevel === 3) {
+        // Rimuovi i numeri delle ottave per il confronto (es: Do2 = Do, Re2 = Re)
+        normalizedAnswer = answer.replace(/\d+$/, '');
+        normalizedCurrentAnswer = currentAnswer.replace(/\d+$/, '');
+        
+        // Debug dopo normalizzazione
+        console.log('DEBUG - Dopo normalizzazione:');
+        console.log('DEBUG - Nota normalizzata:', normalizedAnswer);
+        console.log('DEBUG - Risposta normalizzata:', normalizedCurrentAnswer);
+    }
+    
+    // Per il livello 2, gestisci le note enarmoniche
+    var isCorrect = false;
+    if (currentLevel === 2) {
+        // Mappa delle note enarmoniche (stesso suono, nomi diversi)
+        var enharmonicMap = {
+            'Do#': ['Do#', 'Re♭'],
+            'Re#': ['Re#', 'Mi♭'],
+            'Fa#': ['Fa#', 'Sol♭'],
+            'Sol#': ['Sol#', 'La♭'],
+            'La#': ['La#', 'Si♭'],
+            'Re♭': ['Re♭', 'Do#'],
+            'Mi♭': ['Mi♭', 'Re#'],
+            'Sol♭': ['Sol♭', 'Fa#'],
+            'La♭': ['La♭', 'Sol#'],
+            'Si♭': ['Si♭', 'La#']
+        };
+        
+        // Controlla se la risposta è corretta (inclusi i nomi enarmonici)
+        if (enharmonicMap[normalizedCurrentAnswer]) {
+            isCorrect = enharmonicMap[normalizedCurrentAnswer].includes(normalizedAnswer);
+        } else {
+            isCorrect = normalizedAnswer === normalizedCurrentAnswer;
+        }
+        
+        console.log('DEBUG - Note enarmoniche per:', normalizedCurrentAnswer, ':', enharmonicMap[normalizedCurrentAnswer]);
+        console.log('DEBUG - Risposta corretta?', isCorrect);
+    } else {
+        isCorrect = normalizedAnswer === normalizedCurrentAnswer;
+    }
+    
+    if (isCorrect) {
         exerciseScore++;
         exerciseCount++;
         feedback.textContent = 'Corretto! (' + exerciseCount + '/' + exerciseTotal + ')';
@@ -785,7 +835,35 @@ function checkAnswer(answer) {
             wrongQuestions[currentLevel].push({ question: currentQuestion, answer: currentAnswer });
         }
         
-        feedback.textContent = 'Non corretto. Risposta: ' + currentAnswer + ' (' + exerciseCount + '/' + exerciseTotal + ')';
+        // Per i livelli 1, 2 e 3, mostra la risposta corretta senza numero ottava
+        var displayAnswer = currentAnswer;
+        if (currentLevel === 1 || currentLevel === 2 || currentLevel === 3) {
+            displayAnswer = currentAnswer.replace(/\d+$/, '');
+        }
+        
+        // Per il livello 2, mostra anche le note enarmoniche
+        if (currentLevel === 2) {
+            var enharmonicMap = {
+                'Do#': ['Do#', 'Re♭'],
+                'Re#': ['Re#', 'Mi♭'],
+                'Fa#': ['Fa#', 'Sol♭'],
+                'Sol#': ['Sol#', 'La♭'],
+                'La#': ['La#', 'Si♭'],
+                'Re♭': ['Re♭', 'Do#'],
+                'Mi♭': ['Mi♭', 'Re#'],
+                'Sol♭': ['Sol♭', 'Fa#'],
+                'La♭': ['La♭', 'Sol#'],
+                'Si♭': ['Si♭', 'La#']
+            };
+            
+            if (enharmonicMap[displayAnswer]) {
+                feedback.textContent = 'Non corretto. Risposte accettabili: ' + enharmonicMap[displayAnswer].join(' o ') + ' (' + exerciseCount + '/' + exerciseTotal + ')';
+            } else {
+                feedback.textContent = 'Non corretto. Risposta: ' + displayAnswer + ' (' + exerciseCount + '/' + exerciseTotal + ')';
+            }
+        } else {
+            feedback.textContent = 'Non corretto. Risposta: ' + displayAnswer + ' (' + exerciseCount + '/' + exerciseTotal + ')';
+        }
         feedback.className = 'feedback incorrect';
         feedback.style.display = 'block';
         
@@ -925,22 +1003,7 @@ function generateNextQuestionLevel2() {
         'Suona: Mi♭',
         'Suona: Sol♭',
         'Suona: La♭',
-        'Suona: Si♭',
-        
-        // Note naturali
-        'Suona: Do naturale',
-        'Suona: Re naturale',
-        'Suona: Mi naturale',
-        'Suona: Fa naturale',
-        'Suona: Sol naturale',
-        'Suona: La naturale',
-        'Suona: Si naturale',
-        
-        // Note alterate doppie
-        'Suona: Do## (Do doppio diesis)',
-        'Suona: Fa## (Fa doppio diesis)',
-        'Suona: Si♭♭ (Si doppio bemolle)',
-        'Suona: Mi♭♭ (Mi doppio bemolle)'
+        'Suona: Si♭'
     ];
     
     // Prima controlla se ci sono domande sbagliate da riproporre
@@ -949,7 +1012,7 @@ function generateNextQuestionLevel2() {
         var questionElement = document.getElementById('question-2');
         questionElement.textContent = 'RIPROVA: ' + wrongQuestion.question + ' (' + exerciseCount + '/' + exerciseTotal + ')';
         
-        // Imposta la risposta corretta
+        // Imposta la risposta corretta (gestisce sia prima che seconda ottava)
         if (wrongQuestion.question.includes('Do#')) currentAnswer = 'Do#';
         else if (wrongQuestion.question.includes('Re#')) currentAnswer = 'Re#';
         else if (wrongQuestion.question.includes('Fa#')) currentAnswer = 'Fa#';
@@ -960,17 +1023,6 @@ function generateNextQuestionLevel2() {
         else if (wrongQuestion.question.includes('Sol♭')) currentAnswer = 'Sol♭';
         else if (wrongQuestion.question.includes('La♭')) currentAnswer = 'La♭';
         else if (wrongQuestion.question.includes('Si♭')) currentAnswer = 'Si♭';
-        else if (wrongQuestion.question.includes('Do naturale')) currentAnswer = 'Do';
-        else if (wrongQuestion.question.includes('Re naturale')) currentAnswer = 'Re';
-        else if (wrongQuestion.question.includes('Mi naturale')) currentAnswer = 'Mi';
-        else if (wrongQuestion.question.includes('Fa naturale')) currentAnswer = 'Fa';
-        else if (wrongQuestion.question.includes('Sol naturale')) currentAnswer = 'Sol';
-        else if (wrongQuestion.question.includes('La naturale')) currentAnswer = 'La';
-        else if (wrongQuestion.question.includes('Si naturale')) currentAnswer = 'Si';
-        else if (wrongQuestion.question.includes('Do##')) currentAnswer = 'Do##';
-        else if (wrongQuestion.question.includes('Fa##')) currentAnswer = 'Fa##';
-        else if (wrongQuestion.question.includes('Si♭♭')) currentAnswer = 'Si♭♭';
-        else if (wrongQuestion.question.includes('Mi♭♭')) currentAnswer = 'Mi♭♭';
         return;
     }
     
@@ -993,7 +1045,7 @@ function generateNextQuestionLevel2() {
     var questionElement = document.getElementById('question-2');
     questionElement.textContent = randomQuestion + ' (' + exerciseCount + '/' + exerciseTotal + ')';
     
-    // Imposta la risposta corretta
+    // Imposta la risposta corretta (gestisce sia prima che seconda ottava)
     if (randomQuestion.includes('Do#')) currentAnswer = 'Do#';
     else if (randomQuestion.includes('Re#')) currentAnswer = 'Re#';
     else if (randomQuestion.includes('Fa#')) currentAnswer = 'Fa#';
@@ -1004,17 +1056,6 @@ function generateNextQuestionLevel2() {
     else if (randomQuestion.includes('Sol♭')) currentAnswer = 'Sol♭';
     else if (randomQuestion.includes('La♭')) currentAnswer = 'La♭';
     else if (randomQuestion.includes('Si♭')) currentAnswer = 'Si♭';
-    else if (randomQuestion.includes('Do naturale')) currentAnswer = 'Do';
-    else if (randomQuestion.includes('Re naturale')) currentAnswer = 'Re';
-    else if (randomQuestion.includes('Mi naturale')) currentAnswer = 'Mi';
-    else if (randomQuestion.includes('Fa naturale')) currentAnswer = 'Fa';
-    else if (randomQuestion.includes('Sol naturale')) currentAnswer = 'Sol';
-    else if (randomQuestion.includes('La naturale')) currentAnswer = 'La';
-    else if (randomQuestion.includes('Si naturale')) currentAnswer = 'Si';
-    else if (randomQuestion.includes('Do##')) currentAnswer = 'Do##';
-    else if (randomQuestion.includes('Fa##')) currentAnswer = 'Fa##';
-    else if (randomQuestion.includes('Si♭♭')) currentAnswer = 'Si♭♭';
-    else if (randomQuestion.includes('Mi♭♭')) currentAnswer = 'Mi♭♭';
 }
 
 // Generazione domanda intervalli (livello 3)
