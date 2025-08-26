@@ -94,18 +94,11 @@ var keySignatures = {
     'Sol♭ maggiore': { alterations: '6 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭', sharps: 0, flats: 6, notes: ['Si♭', 'Mi♭', 'La♭', 'Re♭', 'Sol♭', 'Do♭'] }
 };
 
-// Tonalità enarmoniche per il livello 6
+// Tonalità enarmoniche per il livello 6 - SOLO le 3 domande specifiche
 var enharmonicKeys = {
-    'Do♭ maggiore': { enharmonic: 'Si maggiore', reason: 'Do♭ ha 7 ♭, Si ha 5 #', complexity: 'high' },
-    'Do♯ maggiore': { enharmonic: 'Re♭ maggiore', reason: 'Do♯ ha 7 #, Re♭ ha 5 ♭', complexity: 'high' },
-    'Fa♯ maggiore': { enharmonic: 'Sol♭ maggiore', reason: 'Fa♯ ha 6 #, Sol♭ ha 6 ♭', complexity: 'medium' },
-    'Si maggiore': { enharmonic: 'Do♭ maggiore', reason: 'Si ha 5 #, Do♭ ha 7 ♭', complexity: 'low' },
-    'Re♭ maggiore': { enharmonic: 'Do♯ maggiore', reason: 'Re♭ ha 5 ♭, Do♯ ha 7 #', complexity: 'low' },
-    'Sol♭ maggiore': { enharmonic: 'Fa♯ maggiore', reason: 'Sol♭ ha 6 ♭, Fa♯ ha 6 #', complexity: 'low' },
-    'La♭ maggiore': { enharmonic: 'Sol# maggiore', reason: 'La♭ ha 4 ♭, Sol# ha 8 #', complexity: 'medium' },
-    'Mi♭ maggiore': { enharmonic: 'Re# maggiore', reason: 'Mi♭ ha 3 ♭, Re# ha 9 #', complexity: 'medium' },
-    'La maggiore': { enharmonic: 'Si♭♭ maggiore', reason: 'La ha 3 #, Si♭♭ ha 9 ♭', complexity: 'medium' },
-    'Re maggiore': { enharmonic: 'Mi♭♭ maggiore', reason: 'Re ha 2 #, Mi♭♭ ha 10 ♭', complexity: 'medium' }
+    'Do♭ maggiore': { enharmonic: 'Si maggiore', reason: 'Do♭ ha 7 ♭, Si ha 5 # (meno alterazioni)', complexity: 'high' },
+    'Sol♭ maggiore': { enharmonic: 'Fa# maggiore', reason: 'Sol♭ ha 6 ♭, Fa# ha 6 # (stesso numero)', complexity: 'medium' },
+    'Do# maggiore': { enharmonic: 'Re♭ maggiore', reason: 'Do# ha 7 #, Re♭ ha 5 ♭ (meno alterazioni)', complexity: 'high' }
 };
 
 // Inizializzazione audio
@@ -174,12 +167,16 @@ function updateSection() {
         section.classList.add('active');
     }
     
-    // Se si passa alla modalità pratica, avvia automaticamente gli esercizi
-    if (currentMode === 'practice') {
-        // Resetta lo stato degli esercizi
-        exerciseCount = 0;
-        exerciseScore = 0;
-        exerciseTotal = 10; // Default
+            // Se si passa alla modalità pratica, avvia automaticamente gli esercizi
+        if (currentMode === 'practice') {
+            // Resetta lo stato degli esercizi
+            exerciseCount = 0;
+            exerciseScore = 0;
+            if (currentLevel === 6) {
+                exerciseTotal = 5; // Livello 6: sempre 5 domande
+            } else {
+                exerciseTotal = 10; // Default per altri livelli
+            }
         
         // Nascondi il pulsante Gioca per i livelli 1 e 2
         if (currentLevel === 1 || currentLevel === 2) {
@@ -478,20 +475,40 @@ function handleScaleNote(note) {
         console.log('playedNotes:', playedNotes);
         console.log('expectedScale:', expectedScale);
         
-        if (playedNotes.length === expectedScale.length) {
-            console.log('SCALA COMPLETATA! 🎉');
-            // Scala completata correttamente
-            exerciseScore++;
-            exerciseCount++;
-            var feedback = document.getElementById('feedback-4');
-            feedback.textContent = 'Scala corretta! (' + exerciseCount + '/' + exerciseTotal + ')';
-            feedback.className = 'feedback correct';
-            feedback.style.display = 'block';
-            
-            if (exerciseCount >= exerciseTotal) {
-                setTimeout(function() {
-                    feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                }, 1500);
+                    if (playedNotes.length === expectedScale.length) {
+                console.log('SCALA COMPLETATA! 🎉');
+                // Scala completata correttamente
+                exerciseScore++;
+                var feedback = document.getElementById('feedback-4');
+                feedback.textContent = 'Scala corretta! (' + (exerciseCount + 1) + '/' + exerciseTotal + ')';
+                feedback.className = 'feedback correct';
+                feedback.style.display = 'block';
+                
+                if ((exerciseCount + 1) >= exerciseTotal) {
+                // Calcola la percentuale di successo
+                var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
+                
+                if (percentage === 100) {
+                    // 100% corretto - mostra coriandoli e messaggio speciale
+                    showConfetti();
+                    setTimeout(function() {
+                        feedback.textContent = '100% giusto!';
+                        feedback.className = 'feedback correct';
+                        feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                    }, 1000);
+                } else if (percentage >= 75) {
+                    // 75%+ corretto
+                    setTimeout(function() {
+                        feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                    }, 1500);
+                } else {
+                    // Sotto 75% - messaggio in rosso
+                    setTimeout(function() {
+                        feedback.textContent = 'Studia ancora prima di proseguire';
+                        feedback.className = 'feedback incorrect';
+                        feedback.style.background = '#dc2626';
+                    }, 1500);
+                }
             } else {
                 setTimeout(function() {
                     generateNextScaleQuestion();
@@ -522,12 +539,14 @@ function handleScaleNote(note) {
         }
         
         var feedback = document.getElementById('feedback-4');
-        feedback.textContent = 'Errore! Nota sbagliata: ' + normalizedNote + '. Nota attesa: ' + expectedNote + '. (' + exerciseCount + '/' + exerciseTotal + ')';
+        feedback.textContent = 'Non corretto: riprova';
         feedback.className = 'feedback incorrect';
         
         if (exerciseCount >= exerciseTotal) {
             setTimeout(function() {
-                feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                feedback.textContent = 'Studia ancora prima di proseguire';
+                feedback.className = 'feedback incorrect';
+                feedback.style.background = '#dc2626';
             }, 1500);
         } else {
             setTimeout(function() {
@@ -542,6 +561,9 @@ function handleScaleNote(note) {
                 }
         }
     }
+    
+    // Incrementa exerciseCount solo dopo aver gestito tutto
+    exerciseCount++;
 }
 
 // Aggiornamento display note suonate
@@ -590,37 +612,21 @@ function generateNextTonalityQuestion() {
         var wrongQuestion = wrongQuestions[5].shift(); // Prendi e rimuovi la prima tonalità sbagliata
         var tonalityInfo = keySignatures[wrongQuestion.question];
         
-        // Legge la modalità selezionata dall'utente
-        var gameMode = document.getElementById('game-mode-5').value;
-        console.log('Modalità gioco:', gameMode);
-        
         var questionElement = document.getElementById('question-5');
         var tonalityDisplay = document.getElementById('tonality-display-5');
         var alterationsDisplay = document.getElementById('alterations-display-5');
         var tonalityInfo5 = document.getElementById('tonality-info-5');
         var answerButtons = document.getElementById('answer-buttons-5');
         
-        if (gameMode === 'tonality-to-alterations') {
             // Modalità A: data la tonalità, trova le alterazioni
-            questionElement.textContent = 'RIPROVA: Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-            tonalityDisplay.textContent = wrongQuestion.question;
-            alterationsDisplay.textContent = 'Clicca la risposta corretta sotto';
-            currentAnswer = tonalityInfo.alterations;
-            
-            // Mostra solo le opzioni di alterazioni
-            console.log('🎯 Mostrando opzioni alterazioni');
-            showAlterationsOptions();
-        } else {
-            // Modalità B: date le alterazioni, trova la tonalità  
-            questionElement.textContent = 'RIPROVA: Quale tonalità ha queste alterazioni in chiave? (' + exerciseCount + '/' + exerciseTotal + ')';
-            tonalityDisplay.textContent = tonalityInfo.alterations;
-            alterationsDisplay.textContent = 'Clicca la tonalità corretta sotto';
-            currentAnswer = wrongQuestion.question;
-            
-            // Mostra solo le opzioni di tonalità
-            console.log('🎯 Mostrando opzioni tonalità');
-            showTonalityOptions();
-        }
+    questionElement.textContent = 'RIPROVA: Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
+    tonalityDisplay.textContent = wrongQuestion.question;
+    alterationsDisplay.textContent = 'Seleziona le alterazioni corrette dai checkbox';
+    currentAnswer = tonalityInfo.alterations;
+        
+        // Mostra i selettori
+        console.log('🎯 Mostrando selettori per RIPROVA');
+        showTonalityOptions();
         
         tonalityInfo5.style.display = 'block';
         answerButtons.style.display = 'block';
@@ -648,173 +654,275 @@ function generateNextTonalityQuestion() {
     var tonalityInfo = keySignatures[randomTonality];
     console.log('📋 Info tonalità:', tonalityInfo);
     
-    // Legge la modalità selezionata dall'utente
-    var gameMode = document.getElementById('game-mode-5').value;
-    console.log('🎮 Modalità gioco:', gameMode);
-    
     var questionElement = document.getElementById('question-5');
     var tonalityDisplay = document.getElementById('tonality-display-5');
     var alterationsDisplay = document.getElementById('alterations-display-5');
     var tonalityInfo5 = document.getElementById('tonality-info-5');
     var answerButtons = document.getElementById('answer-buttons-5');
     
-    if (gameMode === 'tonality-to-alterations') {
-        // Modalità A: data la tonalità, trova le alterazioni
-        questionElement.textContent = 'Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-        tonalityDisplay.textContent = randomTonality;
-        alterationsDisplay.textContent = 'Clicca la risposta corretta sotto';
-        currentAnswer = tonalityInfo.alterations;
-        console.log('🎯 Modalità A - Risposta corretta:', currentAnswer);
-        
-        // Mostra solo le opzioni di alterazioni
-        console.log('🎯 Mostrando opzioni alterazioni');
-        showAlterationsOptions();
-    } else {
-        // Modalità B: date le alterazioni, trova la tonalità  
-        questionElement.textContent = 'Quale tonalità ha queste alterazioni in chiave? (' + exerciseCount + '/' + exerciseTotal + ')';
-        tonalityDisplay.textContent = tonalityInfo.alterations;
-        alterationsDisplay.textContent = 'Clicca la tonalità corretta sotto';
-        currentAnswer = randomTonality;
-        console.log('🎯 Modalità B - Risposta corretta:', currentAnswer);
-        
-        // Mostra solo le opzioni di tonalità
-        console.log('🎯 Mostrando opzioni tonalità');
-        showTonalityOptions();
-    }
+    // Modalità A: data la tonalità, trova le alterazioni
+    questionElement.textContent = 'Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
+    tonalityDisplay.textContent = randomTonality;
+    alterationsDisplay.textContent = 'Seleziona le alterazioni corrette dai checkbox';
+    currentAnswer = tonalityInfo.alterations;
+    console.log('🎯 Modalità A - Risposta corretta:', currentAnswer);
+    
+    // Mostra i selettori
+    console.log('🎯 Mostrando selettori');
+    showTonalityOptions();
     
     tonalityInfo5.style.display = 'block';
     answerButtons.style.display = 'block';
-    console.log('✅ Pulsanti mostrati per nuova domanda');
+    console.log('✅ Selettori mostrati per nuova domanda');
 }
 
-// Mostra opzioni per le alterazioni (Modalità A)
-function showAlterationsOptions() {
-    var answerButtons = document.getElementById('answer-buttons-5');
-    answerButtons.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;">
-            <button class="btn answer-btn" data-answer="nessuna alterazione" style="font-size: 14px; padding: 8px 12px;">Nessuna alterazione</button>
-            <button class="btn answer-btn" data-answer="1 diesis: Fa#" style="font-size: 14px; padding: 8px 12px;">1 diesis: Fa#</button>
-            <button class="btn answer-btn" data-answer="2 diesis: Fa#, Do#" style="font-size: 14px; padding: 8px 12px;">2 diesis: Fa#, Do#</button>
-            <button class="btn answer-btn" data-answer="3 diesis: Fa#, Do#, Sol#" style="font-size: 14px; padding: 8px 12px;">3 diesis: Fa#, Do#, Sol#</button>
-            <button class="btn answer-btn" data-answer="4 diesis: Fa#, Do#, Sol#, Re#" style="font-size: 14px; padding: 8px 12px;">4 diesis: Fa#, Do#, Sol#, Re#</button>
-            <button class="btn answer-btn" data-answer="5 diesis: Fa#, Do#, Sol#, Re#, La#" style="font-size: 14px; padding: 8px 12px;">5 diesis: Fa#, Do#, Sol#, Re#, La#</button>
-            <button class="btn answer-btn" data-answer="6 diesis: Fa#, Do#, Sol#, Re#, La#, Mi#" style="font-size: 14px; padding: 8px 12px;">6 diesis: Fa#, Do#, Sol#, Re#, La#, Mi#</button>
-            <button class="btn answer-btn" data-answer="7 diesis: Fa#, Do#, Sol#, Re#, La#, Mi#, Si#" style="font-size: 14px; padding: 8px 12px;">7 diesis: Fa#, Do#, Sol#, Re#, La#, Mi#, Si#</button>
-            <button class="btn answer-btn" data-answer="1 bemolle: Si♭" style="font-size: 14px; padding: 8px 12px;">1 bemolle: Si♭</button>
-            <button class="btn answer-btn" data-answer="2 bemolli: Si♭, Mi♭" style="font-size: 14px; padding: 8px 12px;">2 bemolli: Si♭, Mi♭</button>
-            <button class="btn answer-btn" data-answer="3 bemolli: Si♭, Mi♭, La♭" style="font-size: 14px; padding: 8px 12px;">3 bemolli: Si♭, Mi♭, La♭</button>
-            <button class="btn answer-btn" data-answer="4 bemolli: Si♭, Mi♭, La♭, Re♭" style="font-size: 14px; padding: 8px 12px;">4 bemolli: Si♭, Mi♭, La♭, Re♭</button>
-            <button class="btn answer-btn" data-answer="5 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭" style="font-size: 14px; padding: 8px 12px;">5 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭</button>
-            <button class="btn answer-btn" data-answer="6 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭" style="font-size: 14px; padding: 8px 12px;">6 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭</button>
-            <button class="btn answer-btn" data-answer="7 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭, Fa♭" style="font-size: 14px; padding: 8px 12px;">7 bemolli: Si♭, Mi♭, La♭, Re♭, Sol♭, Do♭, Fa♭</button>
-        </div>
-    `;
-    
-    // Ricollega gli event listener
-    var newButtons = answerButtons.querySelectorAll('.answer-btn');
-    for (var i = 0; i < newButtons.length; i++) {
-        newButtons[i].addEventListener('click', function() {
-            if (currentLevel === 5) {
-                handleTonalityAnswer(this.getAttribute('data-answer'));
-            }
-        });
-    }
-}
 
-// Mostra opzioni per le tonalità (Modalità B) - SOLO quelle del livello 4
+
+// Mostra selettori per le tonalità (livello 5)
 function showTonalityOptions() {
     var answerButtons = document.getElementById('answer-buttons-5');
     answerButtons.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;">
-            <button class="btn answer-btn" data-answer="Do maggiore" style="font-size: 14px; padding: 8px 12px;">Do maggiore</button>
-            <button class="btn answer-btn" data-answer="Sol maggiore" style="font-size: 14px; padding: 8px 12px;">Sol maggiore</button>
-            <button class="btn answer-btn" data-answer="Re maggiore" style="font-size: 14px; padding: 8px 12px;">Re maggiore</button>
-            <button class="btn answer-btn" data-answer="La maggiore" style="font-size: 14px; padding: 8px 12px;">La maggiore</button>
-            <button class="btn answer-btn" data-answer="Mi maggiore" style="font-size: 14px; padding: 8px 12px;">Mi maggiore</button>
-            <button class="btn answer-btn" data-answer="Si maggiore" style="font-size: 14px; padding: 8px 12px;">Si maggiore</button>
-            <button class="btn answer-btn" data-answer="Fa maggiore" style="font-size: 14px; padding: 8px 12px;">Fa maggiore</button>
-            <button class="btn answer-btn" data-answer="Si♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Si♭ maggiore</button>
-            <button class="btn answer-btn" data-answer="Mi♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Mi♭ maggiore</button>
-            <button class="btn answer-btn" data-answer="La♭ maggiore" style="font-size: 14px; padding: 8px 12px;">La♭ maggiore</button>
-            <button class="btn answer-btn" data-answer="Re♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Re♭ maggiore</button>
-            <button class="btn answer-btn" data-answer="Sol♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Sol♭ maggiore</button>
-            <button class="btn answer-btn" data-answer="Fa# maggiore" style="font-size: 14px; padding: 8px 12px;">Fa# maggiore</button>
-            <button class="btn answer-btn" data-answer="Do# maggiore" style="font-size: 14px; padding: 8px 12px;">Do# maggiore</button>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin: 20px 0;">
+            <div style="text-align: center; margin: 10px 0;">
+                <label style="font-weight: bold; color: #333; display: block; margin-bottom: 10px;">Seleziona le alterazioni in chiave:</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; max-width: 600px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-none" value="nessuna alterazione" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Nessuna alterazione</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-fa#" value="Fa#" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Fa#</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-do#" value="Do#" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Do#</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-sol#" value="Sol#" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Sol#</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-re#" value="Re#" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Re#</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-la#" value="La#" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">La#</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-mi#" value="Mi#" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Mi#</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-si#" value="Si#" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Si#</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-sib" value="Si♭" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Si♭</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-mib" value="Mi♭" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Mi♭</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-lab" value="La♭" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">La♭</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-reb" value="Re♭" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Re♭</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-solb" value="Sol♭" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Sol♭</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-dob" value="Do♭" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Do♭</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; border-radius: 5px; transition: background-color 0.2s;">
+                        <input type="checkbox" id="alteration-fab" value="Fa♭" style="transform: scale(1.2); margin: 0;">
+                        <span style="color: #333; font-weight: 500;">Fa♭</span>
+                    </label>
+                </div>
+            </div>
+            
+            <button id="check-answer-5" class="btn" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                Controlla Risposta
+            </button>
         </div>
     `;
     
-    // Ricollega gli event listener
-    var newButtons = answerButtons.querySelectorAll('.answer-btn');
-    for (var i = 0; i < newButtons.length; i++) {
-        newButtons[i].addEventListener('click', function() {
+    // Event listener per il pulsante di controllo
+    var checkButton = document.getElementById('check-answer-5');
+    if (checkButton) {
+        checkButton.addEventListener('click', function() {
             if (currentLevel === 5) {
-                handleTonalityAnswer(this.getAttribute('data-answer'));
+                checkTonalityAnswer();
             }
         });
     }
+    
+    // Aggiungi hover effect ai checkbox
+    var labels = answerButtons.querySelectorAll('label');
+    labels.forEach(function(label) {
+        label.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+        });
+        label.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = 'transparent';
+        });
+    });
+}
+
+// Controlla risposta tonalità (livello 5)
+function checkTonalityAnswer() {
+    // Raccogli tutte le alterazioni selezionate
+    var selectedAlterations = [];
+    var checkboxes = document.querySelectorAll('#answer-buttons-5 input[type="checkbox"]:checked');
+    
+    console.log('Checkbox trovati:', checkboxes.length);
+    
+    for (var i = 0; i < checkboxes.length; i++) {
+        var value = checkboxes[i].value;
+        console.log('Checkbox selezionato:', value);
+        if (value === 'nessuna alterazione') {
+            selectedAlterations = ['nessuna alterazione'];
+            break; // Se è selezionata "nessuna alterazione", ignora le altre
+        } else {
+            selectedAlterations.push(value);
+        }
+    }
+    
+    console.log('Alterazioni selezionate:', selectedAlterations);
+    
+    if (selectedAlterations.length === 0) {
+        alert('Seleziona almeno un\'alterazione o "Nessuna alterazione"!');
+        return;
+    }
+    
+    // Costruisci la risposta nel formato corretto
+    var userAnswer;
+    if (selectedAlterations[0] === 'nessuna alterazione') {
+        userAnswer = 'nessuna alterazione';
+    } else {
+        // Ordina le alterazioni per numero (Fa#, Do#, Sol#, Re#, La#, Mi#, Si#)
+        var diesisOrder = ['Fa#', 'Do#', 'Sol#', 'Re#', 'La#', 'Mi#', 'Si#'];
+        var bemolliOrder = ['Si♭', 'Mi♭', 'La♭', 'Re♭', 'Sol♭', 'Do♭', 'Fa♭'];
+        
+        var diesis = selectedAlterations.filter(a => a.includes('#'));
+        var bemolli = selectedAlterations.filter(a => a.includes('♭'));
+        
+        if (diesis.length > 0 && bemolli.length > 0) {
+            alert('Non puoi mescolare diesis e bemolli!');
+            return;
+        }
+        
+        if (diesis.length > 0) {
+            // Ordina per l'ordine corretto dei diesis
+            diesis.sort((a, b) => diesisOrder.indexOf(a) - diesisOrder.indexOf(b));
+            userAnswer = diesis.length + ' diesis: ' + diesis.join(', ');
+        } else if (bemolli.length > 0) {
+            // Ordina per l'ordine corretto dei bemolli
+            bemolli.sort((a, b) => bemolliOrder.indexOf(a) - bemolliOrder.indexOf(b));
+            userAnswer = bemolli.length + ' bemolli: ' + bemolli.join(', ');
+        }
+    }
+    
+    console.log('Risposta utente costruita:', userAnswer);
+    handleTonalityAnswer(userAnswer);
 }
 
 // Gestione risposta tonalità
 function handleTonalityAnswer(selectedAnswer) {
     var feedback = document.getElementById('feedback-5');
     
-    if (selectedAnswer === currentAnswer) {
+        if (selectedAnswer === currentAnswer) {
         exerciseScore++;
-        exerciseCount++;
-        feedback.textContent = 'Corretto! (' + exerciseCount + '/' + exerciseTotal + ')';
+        feedback.textContent = 'Corretto!';
         feedback.className = 'feedback correct';
         feedback.style.display = 'block';
         
-        if (exerciseCount >= exerciseTotal) {
-            setTimeout(function() {
-                feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-            }, 1500);
+        if ((exerciseCount + 1) >= exerciseTotal) {
+            // Calcola la percentuale di successo
+            var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
+            
+            if (percentage === 100) {
+                // 100% corretto - mostra coriandoli e messaggio speciale
+                showConfetti();
+                setTimeout(function() {
+                    feedback.textContent = '100% giusto!';
+                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                }, 1000);
+            } else if (percentage >= 75) {
+                // 75%+ corretto
+                setTimeout(function() {
+                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                }, 1500);
+            } else {
+                // Sotto 75% - messaggio in rosso
+                setTimeout(function() {
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
+                }, 1500);
+            }
         } else {
             setTimeout(function() {
                 generateNextTonalityQuestion();
-            }, 2000);
-                
-                // Riabilita il pulsante Gioca
-                var playButton = document.getElementById('new-exercise-' + currentLevel);
-                if (playButton) {
-                    playButton.style.display = 'inline-block';
-                    playButton.disabled = false;
-                }
+            }, 1000);
         }
     } else {
-        exerciseCount++;
-        
         // Aggiungi la domanda corrente all'array delle domande sbagliate
         var currentQuestion = document.getElementById('question-5').textContent;
         if (currentQuestion && !currentQuestion.startsWith('RIPROVA:')) {
-            var tonalityDisplay = document.getElementById('tonality-display-5');
+            var tonalityDisplay = document.getElementById('tonalityDisplay-5');
             var tonalityName = tonalityDisplay.textContent;
             if (tonalityName) {
                 wrongQuestions[5].push({ question: tonalityName, answer: currentAnswer });
             }
         }
         
-        feedback.textContent = 'Non corretto. La risposta giusta era: ' + currentAnswer;
+        feedback.textContent = 'Non corretto: riprova';
         feedback.className = 'feedback incorrect';
         feedback.style.display = 'block';
         
-        if (exerciseCount >= exerciseTotal) {
-            setTimeout(function() {
-                feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-            }, 1500);
+        if ((exerciseCount + 1) >= exerciseTotal) {
+            // Calcola la percentuale di successo
+            var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
+            
+            if (percentage === 100) {
+                // 100% corretto - mostra coriandoli e messaggio speciale
+                showConfetti();
+                setTimeout(function() {
+                    feedback.textContent = '100% giusto!';
+                    feedback.className = 'feedback correct';
+                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                }, 1000);
+            } else if (percentage >= 75) {
+                // 75%+ corretto
+                setTimeout(function() {
+                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                }, 1500);
+            } else {
+                // Sotto 75% - messaggio in rosso
+                setTimeout(function() {
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
+                }, 1500);
+            }
         } else {
             setTimeout(function() {
                 generateNextTonalityQuestion();
-            }, 2000);
-                
-                // Riabilita il pulsante Gioca
-                var playButton = document.getElementById('new-exercise-' + currentLevel);
-                if (playButton) {
-                    playButton.style.display = 'inline-block';
-                    playButton.disabled = false;
-                }
+            }, 1000);
         }
     }
+    
+    // Incrementa exerciseCount SOLO DOPO aver gestito tutto
+    exerciseCount++;
 }
 
 // Generazione domanda scala (livello 4)
@@ -871,8 +979,7 @@ function generateNextEnharmonicQuestion() {
         var wrongQuestion = wrongQuestions[6].shift(); // Prendi e rimuovi la prima tonalità sbagliata
         var keyInfo = enharmonicKeys[wrongQuestion.question];
         
-        // Legge la modalità selezionata dall'utente
-        var gameMode = document.getElementById('game-mode-6').value;
+
         
         var questionElement = document.getElementById('question-6');
         var tonalityDisplay = document.getElementById('tonality-display-6');
@@ -880,25 +987,15 @@ function generateNextEnharmonicQuestion() {
         var tonalityInfo6 = document.getElementById('tonality-info-6');
         var answerButtons = document.getElementById('answer-buttons-6');
         
-        if (gameMode === 'complex-to-simple') {
-            // Modalità A: data una tonalità complessa, trova la sua forma enarmonica più semplice
-            questionElement.textContent = 'RIPROVA: Qual è la forma enarmonica più semplice di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-            tonalityDisplay.textContent = wrongQuestion.question;
-            alterationsDisplay.textContent = 'Clicca la tonalità enarmonica più semplice sotto';
-            currentAnswer = keyInfo.enharmonic;
-            
-            // Mostra opzioni per tonalità semplici
-            showSimpleKeyOptions();
-        } else {
-            // Modalità B: data una tonalità semplice, trova la sua forma enarmonica complessa
-            questionElement.textContent = 'RIPROVA: Qual è la forma enarmonica complessa di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-            tonalityDisplay.textContent = keyInfo.enharmonic;
-            alterationsDisplay.textContent = 'Clicca la tonalità enarmonica complessa sotto';
-            currentAnswer = wrongQuestion.question;
-            
-            // Mostra opzioni per tonalità complesse
-            showComplexKeyOptions();
-        }
+        // Domanda specifica per le tonalità enarmoniche
+        var questionText = getEnharmonicQuestionText(wrongQuestion.question);
+        questionElement.textContent = 'RIPROVA: ' + questionText + ' (' + exerciseCount + '/' + exerciseTotal + ')';
+        tonalityDisplay.textContent = wrongQuestion.question;
+        alterationsDisplay.textContent = 'Usa le tendine per selezionare nota e alterazione';
+        currentAnswer = keyInfo.enharmonic;
+        
+        // Mostra tutte le opzioni
+        showEnharmonicOptions();
         
         tonalityInfo6.style.display = 'block';
         answerButtons.style.display = 'block';
@@ -923,8 +1020,7 @@ function generateNextEnharmonicQuestion() {
     
     var keyInfo = enharmonicKeys[randomKey];
     
-    // Legge la modalità selezionata dall'utente
-    var gameMode = document.getElementById('game-mode-6').value;
+
     
     var questionElement = document.getElementById('question-6');
     var tonalityDisplay = document.getElementById('tonality-display-6');
@@ -932,87 +1028,96 @@ function generateNextEnharmonicQuestion() {
     var tonalityInfo6 = document.getElementById('tonality-info-6');
     var answerButtons = document.getElementById('answer-buttons-6');
     
-    if (gameMode === 'complex-to-simple') {
-        // Modalità A: data una tonalità complessa, trova la sua forma enarmonica più semplice
-        questionElement.textContent = 'Qual è la forma enarmonica più semplice di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-        tonalityDisplay.textContent = randomKey;
-        alterationsDisplay.textContent = 'Clicca la tonalità enarmonica più semplice sotto';
-        currentAnswer = keyInfo.enharmonic;
-        
-        // Mostra opzioni per tonalità semplici
-        showSimpleKeyOptions();
-    } else {
-        // Modalità B: data una tonalità semplice, trova la sua forma enarmonica complessa
-        questionElement.textContent = 'Qual è la forma enarmonica complessa di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-        tonalityDisplay.textContent = keyInfo.enharmonic;
-        alterationsDisplay.textContent = 'Clicca la tonalità enarmonica complessa sotto';
-        currentAnswer = randomKey;
-        
-        // Mostra opzioni per tonalità complesse
-        showComplexKeyOptions();
-    }
+    // Domanda specifica per le tonalità enarmoniche
+    var questionText = getEnharmonicQuestionText(randomKey);
+    questionElement.textContent = questionText + ' (' + exerciseCount + '/' + exerciseTotal + ')';
+    tonalityDisplay.textContent = randomKey;
+    alterationsDisplay.textContent = 'Usa le tendine per selezionare nota e alterazione';
+    currentAnswer = keyInfo.enharmonic;
+    
+    // Mostra tutte le opzioni
+    showEnharmonicOptions();
     
     tonalityInfo6.style.display = 'block';
     answerButtons.style.display = 'block';
 }
 
-// Mostra opzioni per tonalità semplici (Modalità A)
-function showSimpleKeyOptions() {
+// Mostra le tendine per note e alterazioni (livello 6)
+function showEnharmonicOptions() {
     var answerButtons = document.getElementById('answer-buttons-6');
     answerButtons.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;">
-            <button class="btn answer-btn-6" data-answer="Si maggiore" style="font-size: 14px; padding: 8px 12px;">Si maggiore (5 #)</button>
-            <button class="btn answer-btn-6" data-answer="Fa maggiore" style="font-size: 14px; padding: 8px 12px;">Fa maggiore (1 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="Do maggiore" style="font-size: 14px; padding: 8px 12px;">Do maggiore (nessuna)</button>
-            <button class="btn answer-btn-6" data-answer="Sol maggiore" style="font-size: 14px; padding: 8px 12px;">Sol maggiore (1 #)</button>
-            <button class="btn answer-btn-6" data-answer="Re maggiore" style="font-size: 14px; padding: 8px 12px;">Re maggiore (2 #)</button>
-            <button class="btn answer-btn-6" data-answer="La maggiore" style="font-size: 14px; padding: 8px 12px;">La maggiore (3 #)</button>
-            <button class="btn answer-btn-6" data-answer="Mi maggiore" style="font-size: 14px; padding: 8px 12px;">Mi maggiore (4 #)</button>
-            <button class="btn answer-btn-6" data-answer="Si♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Si♭ maggiore (2 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="Mi♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Mi♭ maggiore (3 ♭)</button>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin: 20px 0;">
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <label for="note-select-6" style="font-weight: bold; color: #333;">Nota:</label>
+                <select id="note-select-6" class="selector" style="min-width: 120px; padding: 8px; border: 2px solid #ddd; border-radius: 5px;">
+                    <option value="">Seleziona nota</option>
+                    <option value="Do">Do</option>
+                    <option value="Re">Re</option>
+                    <option value="Mi">Mi</option>
+                    <option value="Fa">Fa</option>
+                    <option value="Sol">Sol</option>
+                    <option value="La">La</option>
+                    <option value="Si">Si</option>
+                </select>
+                
+                <label for="alteration-select-6" style="font-weight: bold; color: #333;">Alterazione:</label>
+                <select id="alteration-select-6" class="selector" style="min-width: 120px; padding: 8px; border: 2px solid #ddd; border-radius: 5px;">
+                    <option value="">Seleziona alterazione</option>
+                    <option value="">Nessuna</option>
+                    <option value="#"># (diesis)</option>
+                    <option value="♭">♭ (bemolle)</option>
+                </select>
+            </div>
+            
+            <button id="check-answer-6" class="btn" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                Controlla Risposta
+            </button>
         </div>
     `;
     
-    // Ricollega gli event listener
-    var newButtons = answerButtons.querySelectorAll('.answer-btn-6');
-    for (var i = 0; i < newButtons.length; i++) {
-        newButtons[i].addEventListener('click', function() {
+    // Aggiungi event listener per il pulsante di controllo
+    var checkButton = document.getElementById('check-answer-6');
+    if (checkButton) {
+        checkButton.addEventListener('click', function() {
             if (currentLevel === 6) {
-                handleEnharmonicAnswer(this.getAttribute('data-answer'));
+                checkEnharmonicAnswer();
             }
         });
     }
 }
 
-// Mostra opzioni per tonalità complesse (Modalità B)
-function showComplexKeyOptions() {
-    var answerButtons = document.getElementById('answer-buttons-6');
-    answerButtons.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;">
-            <button class="btn answer-btn-6" data-answer="Do♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Do♭ maggiore (7 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="Sol♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Sol♭ maggiore (6 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="Re♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Re♭ maggiore (5 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="La♭ maggiore" style="font-size: 14px; padding: 8px 12px;">La♭ maggiore (4 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="Mi♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Mi♭ maggiore (3 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="Do♯ maggiore" style="font-size: 14px; padding: 8px 12px;">Do♯ maggiore (7 #)</button>
-            <button class="btn answer-btn-6" data-answer="Fa♯ maggiore" style="font-size: 14px; padding: 8px 12px;">Fa♯ maggiore (6 #)</button>
-            <button class="btn answer-btn-6" data-answer="Si maggiore" style="font-size: 14px; padding: 8px 12px;">Si maggiore (5 #)</button>
-            <button class="btn answer-btn-6" data-answer="Sol# maggiore" style="font-size: 14px; padding: 8px 12px;">Sol# maggiore (8 #)</button>
-            <button class="btn answer-btn-6" data-answer="Re# maggiore" style="font-size: 14px; padding: 8px 12px;">Re# maggiore (9 #)</button>
-            <button class="btn answer-btn-6" data-answer="Si♭♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Si♭♭ maggiore (9 ♭)</button>
-            <button class="btn answer-btn-6" data-answer="Mi♭♭ maggiore" style="font-size: 14px; padding: 8px 12px;">Mi♭♭ maggiore (10 ♭)</button>
-        </div>
-    `;
-    
-    // Ricollega gli event listener
-    var newButtons = answerButtons.querySelectorAll('.answer-btn-6');
-    for (var i = 0; i < newButtons.length; i++) {
-        newButtons[i].addEventListener('click', function() {
-            if (currentLevel === 6) {
-                handleEnharmonicAnswer(this.getAttribute('data-answer'));
-            }
-        });
+// Genera il testo della domanda per le tonalità enarmoniche
+function getEnharmonicQuestionText(tonality) {
+    if (tonality === 'Do♭ maggiore') {
+        return 'La tonalità di Do♭ maggiore ha una enarmonica con meno alterazioni: qual è?';
+    } else if (tonality === 'Sol♭ maggiore') {
+        return 'La tonalità di Sol♭ maggiore ha una enarmonica con lo stesso numero di alterazioni. Qual è?';
+    } else if (tonality === 'Do# maggiore') {
+        return 'La tonalità di Do# maggiore ha una enarmonica con meno alterazioni. Qual è?';
     }
+    return 'Qual è la tonalità enarmonica di questa tonalità?';
+}
+
+// Controlla la risposta dalle tendine (livello 6)
+function checkEnharmonicAnswer() {
+    var noteSelect = document.getElementById('note-select-6');
+    var alterationSelect = document.getElementById('alteration-select-6');
+    
+    if (!noteSelect || !alterationSelect) return;
+    
+    var selectedNote = noteSelect.value;
+    var selectedAlteration = alterationSelect.value;
+    
+    if (!selectedNote) {
+        alert('Seleziona una nota!');
+        return;
+    }
+    
+    // Costruisci la risposta dell'utente
+    var userAnswer = selectedNote + selectedAlteration + ' maggiore';
+    
+    // Gestisci la risposta
+    handleEnharmonicAnswer(userAnswer);
 }
 
 // Gestione risposta enarmonia
@@ -1021,15 +1126,35 @@ function handleEnharmonicAnswer(selectedAnswer) {
     
     if (selectedAnswer === currentAnswer) {
         exerciseScore++;
-        exerciseCount++;
-        feedback.textContent = 'Corretto! (' + exerciseCount + '/' + exerciseTotal + ')';
+        feedback.textContent = 'Corretto!';
         feedback.className = 'feedback correct';
         feedback.style.display = 'block';
         
-        if (exerciseCount >= exerciseTotal) {
-            setTimeout(function() {
-                feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-            }, 1500);
+        if ((exerciseCount + 1) >= exerciseTotal) {
+            // Calcola la percentuale di successo
+            var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
+            
+            if (percentage === 100) {
+                // 100% corretto - mostra coriandoli e messaggio speciale
+                showConfetti();
+                setTimeout(function() {
+                    feedback.textContent = '100% giusto!';
+                    feedback.className = 'feedback correct';
+                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                }, 1000);
+            } else if (percentage >= 75) {
+                // 75%+ corretto
+                setTimeout(function() {
+                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                }, 1500);
+            } else {
+                // Sotto 75% - messaggio in rosso
+                setTimeout(function() {
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
+                }, 1500);
+            }
         } else {
             setTimeout(function() {
                 generateNextEnharmonicQuestion();
@@ -1043,8 +1168,6 @@ function handleEnharmonicAnswer(selectedAnswer) {
                 }
         }
     } else {
-        exerciseCount++;
-        
         // Aggiungi la domanda corrente all'array delle domande sbagliate
         var currentQuestion = document.getElementById('question-6').textContent;
         if (currentQuestion && !currentQuestion.startsWith('RIPROVA:')) {
@@ -1055,14 +1178,36 @@ function handleEnharmonicAnswer(selectedAnswer) {
             }
         }
         
-        feedback.textContent = 'Non corretto. La risposta giusta era: ' + currentAnswer;
+        feedback.textContent = 'Non corretto: riprova';
         feedback.className = 'feedback incorrect';
         feedback.style.display = 'block';
         
-        if (exerciseCount >= exerciseTotal) {
-            setTimeout(function() {
-                feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-            }, 1500);
+        if ((exerciseCount + 1) >= exerciseTotal) {
+            // Calcola la percentuale di successo
+            var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
+            
+            if (percentage === 100) {
+                // 100% corretto - mostra coriandoli e messaggio speciale
+                showConfetti();
+                setTimeout(function() {
+                    feedback.textContent = '100% giusto!';
+                    feedback.className = 'feedback correct';
+                    feedback.style.display = 'block';
+                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                }, 1000);
+            } else if (percentage >= 75) {
+                // 75%+ corretto
+                setTimeout(function() {
+                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                }, 1500);
+            } else {
+                // Sotto 75% - messaggio in rosso
+                setTimeout(function() {
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
+                }, 1500);
+            }
         } else {
             setTimeout(function() {
                 generateNextEnharmonicQuestion();
@@ -1076,6 +1221,9 @@ function handleEnharmonicAnswer(selectedAnswer) {
                 }
         }
     }
+    
+    // Incrementa exerciseCount solo dopo aver gestito tutto
+    exerciseCount++;
 }
 
 // Controllo risposta generica
@@ -1103,9 +1251,9 @@ function checkAnswer(answer) {
         console.log('DEBUG - Risposta normalizzata:', normalizedCurrentAnswer);
     }
     
-    // Per il livello 2, gestisci le note enarmoniche
+    // Per il livello 1 e 2, gestisci le note enarmoniche
     var isCorrect = false;
-    if (currentLevel === 2) {
+    if (currentLevel === 1 || currentLevel === 2) {
         // Mappa delle note enarmoniche (stesso suono, nomi diversi)
         var enharmonicMap = {
             'Do#': ['Do#', 'Re♭'],
@@ -1123,11 +1271,15 @@ function checkAnswer(answer) {
         // Controlla se la risposta è corretta (inclusi i nomi enarmonici)
         if (enharmonicMap[normalizedCurrentAnswer]) {
             isCorrect = enharmonicMap[normalizedCurrentAnswer].includes(normalizedAnswer);
+        } else if (enharmonicMap[normalizedAnswer]) {
+            // Controlla anche se la risposta dell'utente ha un equivalente enarmonico
+            isCorrect = enharmonicMap[normalizedAnswer].includes(normalizedCurrentAnswer);
         } else {
             isCorrect = normalizedAnswer === normalizedCurrentAnswer;
         }
         
         console.log('DEBUG - Note enarmoniche per:', normalizedCurrentAnswer, ':', enharmonicMap[normalizedCurrentAnswer]);
+        console.log('DEBUG - Note enarmoniche per risposta utente:', normalizedAnswer, ':', enharmonicMap[normalizedAnswer]);
         console.log('DEBUG - Risposta corretta?', isCorrect);
     } else {
         isCorrect = normalizedAnswer === normalizedCurrentAnswer;
@@ -1135,12 +1287,11 @@ function checkAnswer(answer) {
     
     if (isCorrect) {
         exerciseScore++;
-        exerciseCount++;
-        feedback.textContent = 'Corretto! (' + exerciseCount + '/' + exerciseTotal + ')';
+        feedback.textContent = 'Corretto!';
         feedback.className = 'feedback correct';
         feedback.style.display = 'block';
         
-        if (exerciseCount >= exerciseTotal) {
+        if ((exerciseCount + 1) >= exerciseTotal) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
@@ -1197,8 +1348,6 @@ function checkAnswer(answer) {
             }, 1000);
         }
     } else {
-        exerciseCount++;
-        
         // Aggiungi la domanda corrente all'array delle domande sbagliate
         var currentQuestion = '';
         if (currentLevel === 1) {
@@ -1217,33 +1366,12 @@ function checkAnswer(answer) {
             displayAnswer = currentAnswer.replace(/\d+$/, '');
         }
         
-        // Per il livello 2, mostra anche le note enarmoniche
-        if (currentLevel === 2) {
-            var enharmonicMap = {
-                'Do#': ['Do#', 'Re♭'],
-                'Re#': ['Re#', 'Mi♭'],
-                'Fa#': ['Fa#', 'Sol♭'],
-                'Sol#': ['Sol#', 'La♭'],
-                'La#': ['La#', 'Si♭'],
-                'Re♭': ['Re♭', 'Do#'],
-                'Mi♭': ['Mi♭', 'Re#'],
-                'Sol♭': ['Sol♭', 'Fa#'],
-                'La♭': ['La♭', 'Sol#'],
-                'Si♭': ['Si♭', 'La#']
-            };
-            
-            if (enharmonicMap[displayAnswer]) {
-                feedback.textContent = 'Non corretto. Risposte accettabili: ' + enharmonicMap[displayAnswer].join(' o ') + ' (' + exerciseCount + '/' + exerciseTotal + ')';
-            } else {
-                feedback.textContent = 'Non corretto. Risposta: ' + displayAnswer + ' (' + exerciseCount + '/' + exerciseTotal + ')';
-            }
-        } else {
-            feedback.textContent = 'Non corretto. Risposta: ' + displayAnswer + ' (' + exerciseCount + '/' + exerciseTotal + ')';
-        }
+        // Per tutti i livelli, mostra solo "Non corretto: riprova"
+        feedback.textContent = 'Non corretto: riprova';
         feedback.className = 'feedback incorrect';
         feedback.style.display = 'block';
         
-        if (exerciseCount >= exerciseTotal) {
+        if ((exerciseCount + 1) >= exerciseTotal) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
@@ -1258,12 +1386,12 @@ function checkAnswer(answer) {
             } else if (percentage >= 75) {
                 // 75%+ corretto
                 setTimeout(function() {
-                    feedback.textContent = 'Molto bene! (' + exerciseCount + '/' + exerciseTotal + ')';
+                    feedback.textContent = 'Molto bene! (' + (exerciseCount + 1) + '/' + exerciseTotal + ')';
                 }, 1500);
             } else {
                 // Sotto 75%
                 setTimeout(function() {
-                    feedback.textContent = 'Studia ancora prima di proseguire (' + exerciseCount + '/' + exerciseTotal + ')';
+                    feedback.textContent = 'Studia ancora prima di proseguire (' + (exerciseCount + 1) + '/' + exerciseTotal + ')';
                 }, 1500);
             }
             
@@ -1300,6 +1428,9 @@ function checkAnswer(answer) {
             }, 1000);
         }
     }
+    
+    // Incrementa exerciseCount solo dopo aver gestito tutto
+    exerciseCount++;
 }
 
 // Generazione domanda generica
@@ -1318,6 +1449,11 @@ function generateNextQuestion() {
         { question: 'Trova un semitono ascendente da La', answer: 'La#' },
         { question: 'Trova un semitono ascendente da La#', answer: 'Si' },
         { question: 'Trova un semitono ascendente da Si', answer: 'Do' },
+        { question: 'Trova un semitono ascendente da Mi♭', answer: 'Mi' },
+        { question: 'Trova un semitono ascendente da La♭', answer: 'La' },
+        { question: 'Trova un semitono ascendente da Si♭', answer: 'Si' },
+        { question: 'Trova un semitono ascendente da Re♭', answer: 'Re' },
+        { question: 'Trova un semitono ascendente da Sol♭', answer: 'Sol' },
         
         // Semitoni discendenti
         { question: 'Trova un semitono discendente da Do', answer: 'Si' },
@@ -1332,6 +1468,10 @@ function generateNextQuestion() {
         { question: 'Trova un semitono discendente da La', answer: 'Sol#' },
         { question: 'Trova un semitono discendente da La#', answer: 'La' },
         { question: 'Trova un semitono discendente da Si', answer: 'La#' },
+        { question: 'Trova un semitono discendente da Mi♭', answer: 'Mi' },
+        { question: 'Trova un semitono discendente da La♭', answer: 'La' },
+        { question: 'Trova un semitono discendente da Si♭', answer: 'Si' },
+        { question: 'Trova un semitono discendente da Sol♭', answer: 'Sol' },
         
         // Toni ascendenti
         { question: 'Trova un tono ascendente da Do', answer: 'Re' },
@@ -1346,6 +1486,10 @@ function generateNextQuestion() {
         { question: 'Trova un tono ascendente da La', answer: 'Si' },
         { question: 'Trova un tono ascendente da La#', answer: 'Do' },
         { question: 'Trova un tono ascendente da Si', answer: 'Do#' },
+        { question: 'Trova un tono ascendente da Mi♭', answer: 'Fa' },
+        { question: 'Trova un tono ascendente da La♭', answer: 'Si♭' },
+        { question: 'Trova un tono ascendente da Si♭', answer: 'Do' },
+        { question: 'Trova un tono ascendente da Sol♭', answer: 'La♭' },
         
         // Toni discendenti
         { question: 'Trova un tono discendente da Re', answer: 'Do' },
@@ -1358,8 +1502,12 @@ function generateNextQuestion() {
         { question: 'Trova un tono discendente da La', answer: 'Sol' },
         { question: 'Trova un tono discendente da La#', answer: 'Sol#' },
         { question: 'Trova un tono discendente da Si', answer: 'La' },
-        { question: 'Trova un tono discendente da Do', answer: 'Si' },
-        { question: 'Trova un tono discendente da Do#', answer: 'La' },
+        { question: 'Trova un tono discendente da Do', answer: 'Si♭' },
+        { question: 'Trova un tono discendente da Do#', answer: 'Si' },
+        { question: 'Trova un tono discendente da Mi♭', answer: 'Re♭' },
+        { question: 'Trova un tono discendente da La♭', answer: 'Sol♭' },
+        { question: 'Trova un tono discendente da Si♭', answer: 'La♭' },
+        { question: 'Trova un tono discendente da Sol♭', answer: 'Mi' },
         
 
     ];
@@ -1599,17 +1747,37 @@ function generateNextIntervalQuestion() {
 function handleIntervalAnswer(selectedInterval) {
     var feedback = document.getElementById('feedback-3');
     
-    if (selectedInterval === currentAnswer) {
-        exerciseScore++;
-        exerciseCount++;
-        feedback.textContent = 'Corretto! (' + exerciseCount + '/' + exerciseTotal + ')';
-        feedback.className = 'feedback correct';
-        feedback.style.display = 'block';
-        
-        if (exerciseCount >= exerciseTotal) {
-            setTimeout(function() {
-                feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-            }, 1500);
+            if (selectedInterval === currentAnswer) {
+            exerciseScore++;
+            feedback.textContent = 'Corretto!';
+            feedback.className = 'feedback correct';
+            feedback.style.display = 'block';
+            
+            if ((exerciseCount + 1) >= exerciseTotal) {
+            // Calcola la percentuale di successo
+            var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
+            
+            if (percentage === 100) {
+                // 100% corretto - mostra coriandoli e messaggio speciale
+                showConfetti();
+                setTimeout(function() {
+                    feedback.textContent = '100% giusto!';
+                    feedback.className = 'feedback correct';
+                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                }, 1000);
+            } else if (percentage >= 75) {
+                // 75%+ corretto
+                setTimeout(function() {
+                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                }, 1500);
+            } else {
+                // Sotto 75% - messaggio in rosso
+                setTimeout(function() {
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
+                }, 1500);
+            }
             
             // Mostra messaggio di completamento e riabilita il pulsante Gioca
             setTimeout(function() {
@@ -1630,23 +1798,42 @@ function handleIntervalAnswer(selectedInterval) {
                 generateNextIntervalQuestion();
             }, 1000);
         }
-    } else {
-        exerciseCount++;
-        
-        // Aggiungi la domanda corrente all'array delle domande sbagliate
-        var currentQuestion = document.getElementById('question-3').textContent;
-        if (currentQuestion && !currentQuestion.startsWith('RIPROVA:')) {
-            wrongQuestions[3].push({ question: currentQuestion, answer: currentAnswer });
-        }
-        
-        feedback.textContent = 'Non corretto. La risposta giusta era: ' + currentAnswer + '° (' + exerciseCount + '/' + exerciseTotal + ')';
-        feedback.className = 'feedback incorrect';
-        feedback.style.display = 'block';
-        
-        if (exerciseCount >= exerciseTotal) {
-            setTimeout(function() {
-                feedback.textContent = 'Serie completata! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-            }, 1500);
+            } else {
+            // Aggiungi la domanda corrente all'array delle domande sbagliate
+            var currentQuestion = document.getElementById('question-3').textContent;
+            if (currentQuestion && !currentQuestion.startsWith('RIPROVA:')) {
+                wrongQuestions[3].push({ question: currentQuestion, answer: currentAnswer });
+            }
+            
+            feedback.textContent = 'Non corretto: riprova';
+            feedback.className = 'feedback incorrect';
+            feedback.style.display = 'block';
+            
+            if ((exerciseCount + 1) >= exerciseTotal) {
+            // Calcola la percentuale di successo
+            var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
+            
+            if (percentage === 100) {
+                // 100% corretto - mostra coriandoli e messaggio speciale
+                showConfetti();
+                setTimeout(function() {
+                    feedback.textContent = '100% giusto!';
+                    feedback.className = 'feedback correct';
+                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                }, 1000);
+            } else if (percentage >= 75) {
+                // 75%+ corretto
+                setTimeout(function() {
+                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
+                }, 1500);
+            } else {
+                // Sotto 75% - messaggio in rosso
+                setTimeout(function() {
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
+                }, 1500);
+            }
             
             // Mostra messaggio di completamento e riabilita il pulsante Gioca
             setTimeout(function() {
@@ -1668,13 +1855,21 @@ function handleIntervalAnswer(selectedInterval) {
             }, 1000);
         }
     }
+    
+    // Incrementa exerciseCount solo dopo aver gestito tutto
+    exerciseCount++;
 }
 
 // Inizio nuovo esercizio
 function startNewExercise(level) {
-    var countId = 'question-count-' + level;
-    exerciseTotal = parseInt(document.getElementById(countId).value);
-    exerciseCount = 1;
+    if (level === 6) {
+        // Livello 6: sempre 5 domande (solo 3 tonalità enarmoniche disponibili)
+        exerciseTotal = 5;
+    } else {
+        var countId = 'question-count-' + level;
+        exerciseTotal = parseInt(document.getElementById(countId).value);
+    }
+    exerciseCount = 0;
     exerciseScore = 0;
     currentLevel = level;
     
@@ -1703,8 +1898,13 @@ function startNewExercise(level) {
 
 // Funzione per avviare esercizi automaticamente quando cambia il numero di domande
 function autoStartExercise(level) {
-    var countId = 'question-count-' + level;
-    var newTotal = parseInt(document.getElementById(countId).value);
+    if (level === 6) {
+        // Livello 6: sempre 5 domande
+        var newTotal = 5;
+    } else {
+        var countId = 'question-count-' + level;
+        var newTotal = parseInt(document.getElementById(countId).value);
+    }
     
     // Resetta sempre lo stato degli esercizi
     exerciseTotal = newTotal;
@@ -1866,11 +2066,7 @@ window.addEventListener('load', function() {
         }
     });
     
-    document.getElementById('question-count-6').addEventListener('change', function() {
-        if (currentLevel === 6 && currentMode === 'practice') {
-            autoStartExercise(6);
-        }
-    });
+
     
     // Event listeners per i selettori delle modalità di gioco
     document.getElementById('game-mode-5').addEventListener('change', function() {
@@ -1880,12 +2076,7 @@ window.addEventListener('load', function() {
         }
     });
     
-    document.getElementById('game-mode-6').addEventListener('change', function() {
-        if (currentLevel === 6 && currentMode === 'practice' && exerciseCount > 0) {
-            // Riavvia l'esercizio con la nuova modalità
-            generateNextEnharmonicQuestion();
-        }
-    });
+
     
     // Controllo volume centralizzato
     var volumeControl = document.getElementById('volume-control');
