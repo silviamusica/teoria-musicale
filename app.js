@@ -6,6 +6,7 @@ var currentAnswer = '';
 var exerciseCount = 0;
 var exerciseTotal = 10;
 var exerciseScore = 0;
+var levelCompleted = false;
 
 // Array per tenere traccia delle domande già fatte per ogni livello
 var usedQuestions = {
@@ -167,11 +168,11 @@ function updateSection() {
         section.classList.add('active');
     }
     
-            // Se si passa alla modalità pratica, avvia automaticamente gli esercizi
-        if (currentMode === 'practice') {
-            // Resetta lo stato degli esercizi
-            exerciseCount = 0;
-            exerciseScore = 0;
+    // Se si passa alla modalità pratica, avvia automaticamente gli esercizi
+    if (currentMode === 'practice') {
+        // Resetta lo stato degli esercizi
+        exerciseCount = 0;
+        exerciseScore = 0;
             if (currentLevel === 6) {
                 exerciseTotal = 5; // Livello 6: sempre 5 domande
             } else {
@@ -219,9 +220,11 @@ function handleKeyClick(element) {
     if (element.classList.contains('practice-key')) {
         if (currentLevel === 4 && expectedScale.length > 0) {
             handleScaleNote(note);
-        } else if (currentLevel !== 4 && currentAnswer) {
+        } else if (currentLevel !== 4 && currentLevel !== 3 && currentAnswer) {
             checkAnswer(note);
         }
+        // Livello 3: la tastiera è solo per pratica, non per risposte
+        // Le risposte si danno tramite i pulsanti sotto
     }
 }
 
@@ -409,6 +412,12 @@ function handleScaleNote(note) {
     console.log('expectedScale:', expectedScale);
     console.log('currentLevel:', currentLevel);
     
+    // Se il livello è già completato, non permettere nuove azioni
+    if (levelCompleted) {
+        console.log('Livello completato, ignorando input dalla tastiera');
+        return;
+    }
+    
     // Verifica che siamo nel livello 4 e che expectedScale sia definita
     if (currentLevel !== 4 || !expectedScale || expectedScale.length === 0) {
         console.log('Errore: livello sbagliato o scala non definita');
@@ -475,13 +484,13 @@ function handleScaleNote(note) {
         console.log('playedNotes:', playedNotes);
         console.log('expectedScale:', expectedScale);
         
-                    if (playedNotes.length === expectedScale.length) {
+        if (playedNotes.length === expectedScale.length) {
                 console.log('SCALA COMPLETATA! 🎉');
-                // Scala completata correttamente
-                exerciseScore++;
-                var feedback = document.getElementById('feedback-4');
-                feedback.textContent = 'Scala corretta! (' + (exerciseCount + 1) + '/' + exerciseTotal + ')';
-                feedback.className = 'feedback correct';
+            // Scala completata correttamente
+            exerciseScore++;
+            var feedback = document.getElementById('feedback-4');
+                feedback.textContent = 'Scala corretta!';
+            feedback.className = 'feedback correct';
                 feedback.style.display = 'block';
                 
                 if ((exerciseCount + 1) >= exerciseTotal) {
@@ -489,18 +498,16 @@ function handleScaleNote(note) {
                 var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
                 
                 if (percentage === 100) {
-                    // 100% corretto - mostra coriandoli e messaggio speciale
+                    // 100% corretto - mostra coriandoli e messaggio speciale IMMEDIATO
                     showConfetti();
-                    setTimeout(function() {
-                        feedback.textContent = '100% giusto!';
-                        feedback.className = 'feedback correct';
-                        feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                    }, 1000);
+                    feedback.textContent = '100% giusto!';
+                    feedback.className = 'feedback correct';
+                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
                 } else if (percentage >= 75) {
-                    // 75%+ corretto
-                    setTimeout(function() {
-                        feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                    }, 1500);
+                    // 75%+ corretto - VERDE
+                    feedback.textContent = 'Molto bene!';
+                    feedback.className = 'feedback correct';
+                    feedback.style.background = '#10b981'; // Verde
                 } else {
                     // Sotto 75% - messaggio in rosso
                     setTimeout(function() {
@@ -509,6 +516,11 @@ function handleScaleNote(note) {
                         feedback.style.background = '#dc2626';
                     }, 1500);
                 }
+                
+                // Disabilita input e mostra riepilogo IMMEDIATO
+                disableLevelInputs(4);
+                levelCompleted = true;
+                showWrongAnswersSummary(4);
             } else {
                 setTimeout(function() {
                     generateNextScaleQuestion();
@@ -548,6 +560,16 @@ function handleScaleNote(note) {
                 feedback.className = 'feedback incorrect';
                 feedback.style.background = '#dc2626';
             }, 1500);
+            
+            // Disabilita input dopo il completamento
+            setTimeout(function() {
+                disableLevelInputs(4);
+                
+                // Mostra riepilogo risposte sbagliate con un ritardo aggiuntivo
+                setTimeout(function() {
+                    showWrongAnswersSummary(4);
+                }, 500);
+            }, 2000);
         } else {
             setTimeout(function() {
                 generateNextScaleQuestion();
@@ -619,14 +641,14 @@ function generateNextTonalityQuestion() {
         var answerButtons = document.getElementById('answer-buttons-5');
         
             // Modalità A: data la tonalità, trova le alterazioni
-    questionElement.textContent = 'RIPROVA: Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-    tonalityDisplay.textContent = wrongQuestion.question;
+            questionElement.textContent = 'RIPROVA: Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
+            tonalityDisplay.textContent = wrongQuestion.question;
     alterationsDisplay.textContent = 'Seleziona le alterazioni corrette dai checkbox';
-    currentAnswer = tonalityInfo.alterations;
-        
+            currentAnswer = tonalityInfo.alterations;
+            
         // Mostra i selettori
         console.log('🎯 Mostrando selettori per RIPROVA');
-        showTonalityOptions();
+            showTonalityOptions();
         
         tonalityInfo5.style.display = 'block';
         answerButtons.style.display = 'block';
@@ -645,31 +667,31 @@ function generateNextTonalityQuestion() {
             availableTonalities = tonalityNames;
         }
         
-            var randomTonality = availableTonalities[Math.floor(Math.random() * availableTonalities.length)];
+        var randomTonality = availableTonalities[Math.floor(Math.random() * availableTonalities.length)];
     console.log('🎲 Tonalità selezionata:', randomTonality);
-    
-    // Aggiungi la tonalità all'array delle tonalità usate
-    usedQuestions[5].push(randomTonality);
-    
-    var tonalityInfo = keySignatures[randomTonality];
+        
+        // Aggiungi la tonalità all'array delle tonalità usate
+        usedQuestions[5].push(randomTonality);
+        
+        var tonalityInfo = keySignatures[randomTonality];
     console.log('📋 Info tonalità:', tonalityInfo);
+        
+        var questionElement = document.getElementById('question-5');
+        var tonalityDisplay = document.getElementById('tonality-display-5');
+        var alterationsDisplay = document.getElementById('alterations-display-5');
+        var tonalityInfo5 = document.getElementById('tonality-info-5');
+        var answerButtons = document.getElementById('answer-buttons-5');
     
-    var questionElement = document.getElementById('question-5');
-    var tonalityDisplay = document.getElementById('tonality-display-5');
-    var alterationsDisplay = document.getElementById('alterations-display-5');
-    var tonalityInfo5 = document.getElementById('tonality-info-5');
-    var answerButtons = document.getElementById('answer-buttons-5');
-    
-    // Modalità A: data la tonalità, trova le alterazioni
-    questionElement.textContent = 'Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
-    tonalityDisplay.textContent = randomTonality;
+        // Modalità A: data la tonalità, trova le alterazioni
+        questionElement.textContent = 'Quali sono le alterazioni in chiave di questa tonalità? (' + exerciseCount + '/' + exerciseTotal + ')';
+        tonalityDisplay.textContent = randomTonality;
     alterationsDisplay.textContent = 'Seleziona le alterazioni corrette dai checkbox';
-    currentAnswer = tonalityInfo.alterations;
+        currentAnswer = tonalityInfo.alterations;
     console.log('🎯 Modalità A - Risposta corretta:', currentAnswer);
     
     // Mostra i selettori
     console.log('🎯 Mostrando selettori');
-    showTonalityOptions();
+        showTonalityOptions();
     
     tonalityInfo5.style.display = 'block';
     answerButtons.style.display = 'block';
@@ -837,38 +859,48 @@ function checkTonalityAnswer() {
 
 // Gestione risposta tonalità
 function handleTonalityAnswer(selectedAnswer) {
+    // Se il livello è già completato, non permettere nuove azioni
+    if (levelCompleted) {
+        return;
+    }
+    
     var feedback = document.getElementById('feedback-5');
     
-        if (selectedAnswer === currentAnswer) {
+    if (selectedAnswer === currentAnswer) {
         exerciseScore++;
         feedback.textContent = 'Corretto!';
         feedback.className = 'feedback correct';
+        feedback.style.background = '#10b981'; // Verde
         feedback.style.display = 'block';
         
         if ((exerciseCount + 1) >= exerciseTotal) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
-                // 100% corretto - mostra coriandoli e messaggio speciale
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
+                // 100% corretto - mostra coriandoli e messaggio speciale IMMEDIATO
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+                feedback.textContent = '100% giusto!';
+                feedback.className = 'feedback correct';
+                feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
-                // 75%+ corretto
-                setTimeout(function() {
-                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                }, 1500);
-            } else {
+                // 75%+ corretto - VERDE
+                feedback.textContent = 'Molto bene!';
+                feedback.className = 'feedback correct';
+                feedback.style.background = '#10b981'; // Verde
+        } else {
                 // Sotto 75% - messaggio in rosso
-                setTimeout(function() {
+            setTimeout(function() {
                     feedback.textContent = 'Studia ancora prima di proseguire';
                     feedback.className = 'feedback incorrect';
                     feedback.style.background = '#dc2626';
                 }, 1500);
             }
+            
+            // Disabilita input e mostra riepilogo IMMEDIATO
+            disableLevelInputs(5);
+            levelCompleted = true;
+            showWrongAnswersSummary(5);
         } else {
             setTimeout(function() {
                 generateNextTonalityQuestion();
@@ -893,27 +925,30 @@ function handleTonalityAnswer(selectedAnswer) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
                 // 100% corretto - mostra coriandoli e messaggio speciale
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.className = 'feedback correct';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+            feedback.textContent = '100% giusto!';
+            feedback.className = 'feedback correct';
+            feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
-                // 75%+ corretto
-                setTimeout(function() {
-                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                }, 1500);
-            } else {
+                // 75%+ corretto - VERDE
+                feedback.textContent = 'Molto bene!';
+                feedback.className = 'feedback correct';
+                feedback.style.background = '#10b981'; // Verde
+        } else {
                 // Sotto 75% - messaggio in rosso
-                setTimeout(function() {
+            setTimeout(function() {
                     feedback.textContent = 'Studia ancora prima di proseguire';
                     feedback.className = 'feedback incorrect';
                     feedback.style.background = '#dc2626';
                 }, 1500);
             }
+            
+            // Disabilita input e mostra riepilogo IMMEDIATO
+            disableLevelInputs(5);
+            levelCompleted = true;
+            showWrongAnswersSummary(5);
         } else {
             setTimeout(function() {
                 generateNextTonalityQuestion();
@@ -990,10 +1025,10 @@ function generateNextEnharmonicQuestion() {
         // Domanda specifica per le tonalità enarmoniche
         var questionText = getEnharmonicQuestionText(wrongQuestion.question);
         questionElement.textContent = 'RIPROVA: ' + questionText + ' (' + exerciseCount + '/' + exerciseTotal + ')';
-        tonalityDisplay.textContent = wrongQuestion.question;
+            tonalityDisplay.textContent = wrongQuestion.question;
         alterationsDisplay.textContent = 'Usa le tendine per selezionare nota e alterazione';
-        currentAnswer = keyInfo.enharmonic;
-        
+            currentAnswer = keyInfo.enharmonic;
+            
         // Mostra tutte le opzioni
         showEnharmonicOptions();
         
@@ -1031,10 +1066,10 @@ function generateNextEnharmonicQuestion() {
     // Domanda specifica per le tonalità enarmoniche
     var questionText = getEnharmonicQuestionText(randomKey);
     questionElement.textContent = questionText + ' (' + exerciseCount + '/' + exerciseTotal + ')';
-    tonalityDisplay.textContent = randomKey;
+        tonalityDisplay.textContent = randomKey;
     alterationsDisplay.textContent = 'Usa le tendine per selezionare nota e alterazione';
-    currentAnswer = keyInfo.enharmonic;
-    
+        currentAnswer = keyInfo.enharmonic;
+        
     // Mostra tutte le opzioni
     showEnharmonicOptions();
     
@@ -1128,33 +1163,35 @@ function handleEnharmonicAnswer(selectedAnswer) {
         exerciseScore++;
         feedback.textContent = 'Corretto!';
         feedback.className = 'feedback correct';
+        feedback.style.background = '#10b981'; // Verde
         feedback.style.display = 'block';
         
         if ((exerciseCount + 1) >= exerciseTotal) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
                 // 100% corretto - mostra coriandoli e messaggio speciale
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.className = 'feedback correct';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+            feedback.textContent = '100% giusto!';
+            feedback.className = 'feedback correct';
+            feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
-                // 75%+ corretto
-                setTimeout(function() {
-                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                }, 1500);
-            } else {
-                // Sotto 75% - messaggio in rosso
-                setTimeout(function() {
+                // 75%+ corretto - VERDE
+                feedback.textContent = 'Molto bene!';
+                feedback.className = 'feedback correct';
+                feedback.style.background = '#10b981'; // Verde
+                            } else {
+                    // Sotto 75% - messaggio in rosso IMMEDIATO
                     feedback.textContent = 'Studia ancora prima di proseguire';
                     feedback.className = 'feedback incorrect';
                     feedback.style.background = '#dc2626';
-                }, 1500);
             }
+            
+            // Disabilita input e mostra riepilogo IMMEDIATO
+            disableLevelInputs(6);
+            levelCompleted = true;
+            showWrongAnswersSummary(6);
         } else {
             setTimeout(function() {
                 generateNextEnharmonicQuestion();
@@ -1186,28 +1223,29 @@ function handleEnharmonicAnswer(selectedAnswer) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
                 // 100% corretto - mostra coriandoli e messaggio speciale
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.className = 'feedback correct';
-                    feedback.style.display = 'block';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+            feedback.textContent = '100% giusto!';
+            feedback.className = 'feedback correct';
+            feedback.style.display = 'block';
+            feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
-                // 75%+ corretto
-                setTimeout(function() {
-                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                }, 1500);
-            } else {
-                // Sotto 75% - messaggio in rosso
-                setTimeout(function() {
+                // 75%+ corretto - VERDE
+                feedback.textContent = 'Molto bene!';
+                feedback.className = 'feedback correct';
+                feedback.style.background = '#10b981'; // Verde
+                            } else {
+                    // Sotto 75% - messaggio in rosso IMMEDIATO
                     feedback.textContent = 'Studia ancora prima di proseguire';
                     feedback.className = 'feedback incorrect';
                     feedback.style.background = '#dc2626';
-                }, 1500);
             }
+            
+            // Disabilita input e mostra riepilogo IMMEDIATO
+            disableLevelInputs(6);
+            levelCompleted = true;
+            showWrongAnswersSummary(6);
         } else {
             setTimeout(function() {
                 generateNextEnharmonicQuestion();
@@ -1228,6 +1266,11 @@ function handleEnharmonicAnswer(selectedAnswer) {
 
 // Controllo risposta generica
 function checkAnswer(answer) {
+    // Se il livello è già completato, non permettere nuove azioni
+    if (levelCompleted) {
+        return;
+    }
+    
     var feedbackId = 'feedback-' + currentLevel;
     var feedback = document.getElementById(feedbackId);
     
@@ -1289,30 +1332,30 @@ function checkAnswer(answer) {
         exerciseScore++;
         feedback.textContent = 'Corretto!';
         feedback.className = 'feedback correct';
+        feedback.style.background = '#10b981'; // Verde
         feedback.style.display = 'block';
         
         if ((exerciseCount + 1) >= exerciseTotal) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
                 // 100% corretto - mostra coriandoli e messaggio speciale
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.className = 'feedback correct';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+                feedback.textContent = '100% giusto!';
+            feedback.className = 'feedback correct';
+            feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
                 // 75%+ corretto
                 setTimeout(function() {
-                    feedback.textContent = 'Molto bene! (' + exerciseCount + '/' + exerciseTotal + ')';
+                    console.log('Impostando feedback finale: Molto bene!');
+                    feedback.textContent = 'Molto bene!';
                 }, 1500);
-            } else {
-                // Sotto 75%
-                setTimeout(function() {
-                    feedback.textContent = 'Studia ancora prima di proseguire (' + exerciseCount + '/' + exerciseTotal + ')';
-                }, 1500);
+                            } else {
+                    // Sotto 75% - messaggio in rosso IMMEDIATO
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
             }
             
             // Mostra messaggio di completamento
@@ -1375,33 +1418,36 @@ function checkAnswer(answer) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
                 // 100% corretto - mostra coriandoli e messaggio speciale
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.className = 'feedback correct';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+                feedback.textContent = '100% giusto!';
+            feedback.className = 'feedback correct';
+            feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
                 // 75%+ corretto
                 setTimeout(function() {
-                    feedback.textContent = 'Molto bene! (' + (exerciseCount + 1) + '/' + exerciseTotal + ')';
+                    console.log('Impostando feedback finale: Molto bene!');
+                    feedback.textContent = 'Molto bene!';
                 }, 1500);
-            } else {
-                // Sotto 75%
-                setTimeout(function() {
-                    feedback.textContent = 'Studia ancora prima di proseguire (' + (exerciseCount + 1) + '/' + exerciseTotal + ')';
-                }, 1500);
+                            } else {
+                    // Sotto 75% - messaggio in rosso IMMEDIATO
+                    feedback.textContent = 'Studia ancora prima di proseguire';
+                    feedback.className = 'feedback incorrect';
+                    feedback.style.background = '#dc2626';
             }
             
-            // Mostra messaggio di completamento
+            // Mostra messaggio di completamento e disabilita input
             setTimeout(function() {
                 var questionElement = document.getElementById('question-' + currentLevel);
                 if (questionElement) {
                     questionElement.textContent = 'Livello completato';
                 }
-            }, 2000);
+                
+                // Disabilita tutti gli input per questo livello
+                disableLevelInputs(currentLevel);
+                levelCompleted = true;
+                showWrongAnswersSummary(currentLevel);
                 
                 // Riabilita il pulsante Gioca
                 var playButton = document.getElementById('new-exercise-' + currentLevel);
@@ -1409,6 +1455,7 @@ function checkAnswer(answer) {
                     playButton.style.display = 'inline-block';
                     playButton.disabled = false;
                 }
+            }, 2000);
         } else {
             // Progressione automatica alla domanda successiva
             setTimeout(function() {
@@ -1468,10 +1515,10 @@ function generateNextQuestion() {
         { question: 'Trova un semitono discendente da La', answer: 'Sol#' },
         { question: 'Trova un semitono discendente da La#', answer: 'La' },
         { question: 'Trova un semitono discendente da Si', answer: 'La#' },
-        { question: 'Trova un semitono discendente da Mi♭', answer: 'Mi' },
+        { question: 'Trova un semitono discendente da Mi♭', answer: 'Re' },
         { question: 'Trova un semitono discendente da La♭', answer: 'La' },
-        { question: 'Trova un semitono discendente da Si♭', answer: 'Si' },
-        { question: 'Trova un semitono discendente da Sol♭', answer: 'Sol' },
+        { question: 'Trova un semitono discendente da Si♭', answer: 'La' },
+        { question: 'Trova un semitono discendente da Sol♭', answer: 'Fa' },
         
         // Toni ascendenti
         { question: 'Trova un tono ascendente da Do', answer: 'Re' },
@@ -1747,39 +1794,36 @@ function generateNextIntervalQuestion() {
 function handleIntervalAnswer(selectedInterval) {
     var feedback = document.getElementById('feedback-3');
     
-            if (selectedInterval === currentAnswer) {
-            exerciseScore++;
+    if (selectedInterval === currentAnswer) {
+        exerciseScore++;
             feedback.textContent = 'Corretto!';
-            feedback.className = 'feedback correct';
-            feedback.style.display = 'block';
-            
+        feedback.className = 'feedback correct';
+        feedback.style.background = '#10b981'; // Verde
+        feedback.style.display = 'block';
+        
             if ((exerciseCount + 1) >= exerciseTotal) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
                 // 100% corretto - mostra coriandoli e messaggio speciale
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.className = 'feedback correct';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+            feedback.textContent = '100% giusto!';
+            feedback.className = 'feedback correct';
+            feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
-                // 75%+ corretto
-                setTimeout(function() {
-                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                }, 1500);
-            } else {
-                // Sotto 75% - messaggio in rosso
-                setTimeout(function() {
+                // 75%+ corretto - VERDE
+                feedback.textContent = 'Molto bene!';
+                feedback.className = 'feedback correct';
+                feedback.style.background = '#10b981'; // Verde
+                            } else {
+                    // Sotto 75% - messaggio in rosso IMMEDIATO
                     feedback.textContent = 'Studia ancora prima di proseguire';
                     feedback.className = 'feedback incorrect';
                     feedback.style.background = '#dc2626';
-                }, 1500);
             }
             
-            // Mostra messaggio di completamento e riabilita il pulsante Gioca
+            // Mostra messaggio di completamento, riabilita il pulsante Gioca e disabilita input
             setTimeout(function() {
                 var questionElement = document.getElementById('question-3');
                 if (questionElement) {
@@ -1792,50 +1836,54 @@ function handleIntervalAnswer(selectedInterval) {
                     playButton.style.display = 'inline-block';
                     playButton.disabled = false;
                 }
+                
+                // Disabilita input dopo il completamento
+                disableLevelInputs(3);
+                
+                // Mostra riepilogo risposte sbagliate con un ritardo aggiuntivo
+                setTimeout(function() {
+                    showWrongAnswersSummary(3);
+                }, 500);
             }, 2000);
         } else {
             setTimeout(function() {
                 generateNextIntervalQuestion();
             }, 1000);
         }
-            } else {
-            // Aggiungi la domanda corrente all'array delle domande sbagliate
-            var currentQuestion = document.getElementById('question-3').textContent;
-            if (currentQuestion && !currentQuestion.startsWith('RIPROVA:')) {
-                wrongQuestions[3].push({ question: currentQuestion, answer: currentAnswer });
-            }
-            
+    } else {
+        // Aggiungi la domanda corrente all'array delle domande sbagliate
+        var currentQuestion = document.getElementById('question-3').textContent;
+        if (currentQuestion && !currentQuestion.startsWith('RIPROVA:')) {
+            wrongQuestions[3].push({ question: currentQuestion, answer: currentAnswer });
+        }
+        
             feedback.textContent = 'Non corretto: riprova';
-            feedback.className = 'feedback incorrect';
-            feedback.style.display = 'block';
-            
+        feedback.className = 'feedback incorrect';
+        feedback.style.display = 'block';
+        
             if ((exerciseCount + 1) >= exerciseTotal) {
             // Calcola la percentuale di successo
             var percentage = Math.round((exerciseScore / exerciseTotal) * 100);
             
-            if (percentage === 100) {
+            if (percentage === 100 && exerciseScore === exerciseTotal) {
                 // 100% corretto - mostra coriandoli e messaggio speciale
                 showConfetti();
-                setTimeout(function() {
-                    feedback.textContent = '100% giusto!';
-                    feedback.className = 'feedback correct';
-                    feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
-                }, 1000);
+            feedback.textContent = '100% giusto!';
+            feedback.className = 'feedback correct';
+            feedback.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
             } else if (percentage >= 75) {
-                // 75%+ corretto
-                setTimeout(function() {
-                    feedback.textContent = 'Molto bene! Punteggio: ' + exerciseScore + '/' + exerciseTotal;
-                }, 1500);
-            } else {
-                // Sotto 75% - messaggio in rosso
-                setTimeout(function() {
+                // 75%+ corretto - VERDE
+                feedback.textContent = 'Molto bene!';
+                feedback.className = 'feedback correct';
+                feedback.style.background = '#10b981'; // Verde
+                            } else {
+                    // Sotto 75% - messaggio in rosso IMMEDIATO
                     feedback.textContent = 'Studia ancora prima di proseguire';
                     feedback.className = 'feedback incorrect';
                     feedback.style.background = '#dc2626';
-                }, 1500);
             }
             
-            // Mostra messaggio di completamento e riabilita il pulsante Gioca
+            // Mostra messaggio di completamento, riabilita il pulsante Gioca e disabilita input
             setTimeout(function() {
                 var questionElement = document.getElementById('question-3');
                 if (questionElement) {
@@ -1848,6 +1896,14 @@ function handleIntervalAnswer(selectedInterval) {
                     playButton.style.display = 'inline-block';
                     playButton.disabled = false;
                 }
+                
+                // Disabilita input dopo il completamento
+                disableLevelInputs(3);
+                
+                // Mostra riepilogo risposte sbagliate con un ritardo aggiuntivo
+                setTimeout(function() {
+                    showWrongAnswersSummary(3);
+                }, 500);
             }, 2000);
         } else {
             setTimeout(function() {
@@ -1860,24 +1916,245 @@ function handleIntervalAnswer(selectedInterval) {
     exerciseCount++;
 }
 
+// Funzione per mostrare il riepilogo delle risposte sbagliate
+function showWrongAnswersSummary(level) {
+    console.log('Chiamando showWrongAnswersSummary per livello:', level);
+    var wrongAnswers = wrongQuestions[level];
+    console.log('Risposte sbagliate trovate:', wrongAnswers);
+    
+    if (wrongAnswers.length === 0) {
+        console.log('Nessuna risposta sbagliata, non mostro il riepilogo');
+        return; // Nessuna risposta sbagliata
+    }
+    
+    // Trova l'elemento feedback del livello corrente
+    var feedback = document.getElementById('feedback-' + level);
+    console.log('Elemento feedback trovato:', feedback);
+    
+    if (feedback) {
+        console.log('Creando riepilogo per', wrongAnswers.length, 'risposte sbagliate');
+        // Crea un elemento separato per il riepilogo
+        var summaryDiv = document.createElement('div');
+        summaryDiv.style.marginTop = '15px';
+        summaryDiv.style.padding = '10px';
+        summaryDiv.style.backgroundColor = '#fee2e2';
+        summaryDiv.style.border = '1px solid #dc2626';
+        summaryDiv.style.borderRadius = '5px';
+        summaryDiv.style.fontSize = '14px';
+        
+        var summaryTitle = document.createElement('strong');
+        summaryTitle.textContent = 'Risposte sbagliate:';
+        summaryTitle.style.color = '#dc2626';
+        summaryDiv.appendChild(summaryTitle);
+        
+        var summaryList = document.createElement('ul');
+        summaryList.style.margin = '5px 0 0 0';
+        summaryList.style.paddingLeft = '20px';
+        
+        for (var i = 0; i < wrongAnswers.length; i++) {
+            var wrong = wrongAnswers[i];
+            var listItem = document.createElement('li');
+            listItem.style.marginBottom = '3px';
+            
+            var questionText = wrong.question.replace(/RIPROVA:\s*/, '').replace(/\s*\(\d+\/\d+\)$/, '');
+            listItem.textContent = questionText;
+            
+            if (wrong.answer) {
+                var answerSpan = document.createElement('span');
+                answerSpan.style.color = '#059669';
+                answerSpan.style.fontWeight = 'bold';
+                answerSpan.textContent = ' → ' + wrong.answer;
+                listItem.appendChild(answerSpan);
+            }
+            
+            summaryList.appendChild(listItem);
+        }
+        
+        summaryDiv.appendChild(summaryList);
+        
+        // Prova prima a inserire nel contenitore del livello
+        var levelContainer = document.querySelector('#level-' + level + ' .level-content');
+        if (levelContainer) {
+            console.log('Inserendo riepilogo nel contenitore del livello');
+            levelContainer.appendChild(summaryDiv);
+            console.log('Riepilogo inserito nel contenitore del livello');
+        } else {
+            // Fallback: inserisci dopo l'elemento feedback
+            if (feedback.parentNode) {
+                console.log('Inserendo riepilogo dopo feedback');
+                feedback.parentNode.insertBefore(summaryDiv, feedback.nextSibling);
+                console.log('Riepilogo inserito con successo');
+            } else {
+                console.log('ERRORE: feedback.parentNode non trovato');
+            }
+        }
+    } else {
+        console.log('ERRORE: Elemento feedback non trovato per livello', level);
+    }
+}
+
+// Funzione per riabilitare tutti gli input di un livello
+function enableLevelInputs(level) {
+    console.log('Riabilito input per livello:', level);
+    
+    if (level === 1 || level === 2) {
+        // Per i livelli 1 e 2, riabilita tutti i tasti della tastiera
+        var keyboardKeys = document.querySelectorAll('.keyboard-key');
+        keyboardKeys.forEach(function(key) {
+            key.style.pointerEvents = 'auto';
+            key.style.opacity = '1';
+        });
+    } else if (level === 3) {
+        // Per il livello 3, riabilita i pulsanti degli intervalli
+        var intervalButtons = document.querySelectorAll('#answer-buttons-3 button');
+        intervalButtons.forEach(function(button) {
+            button.disabled = false;
+            button.style.pointerEvents = 'auto';
+            button.style.opacity = '1';
+        });
+    } else if (level === 4) {
+        // Per il livello 4, riabilita tutti i tasti della tastiera
+        var keyboardKeys = document.querySelectorAll('.keyboard-key');
+        keyboardKeys.forEach(function(key) {
+            key.style.pointerEvents = 'auto';
+            key.style.opacity = '1';
+        });
+    } else if (level === 5) {
+        // Per il livello 5, riabilita i checkbox e il pulsante controlla
+        var checkboxes = document.querySelectorAll('#answer-buttons-5 input[type="checkbox"]');
+        var checkButton = document.getElementById('check-answer-5');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.disabled = false;
+            checkbox.style.pointerEvents = 'auto';
+            checkbox.style.opacity = '1';
+        });
+        if (checkButton) {
+            checkButton.disabled = false;
+            checkButton.style.pointerEvents = 'auto';
+            checkButton.style.opacity = '1';
+        }
+    } else if (level === 6) {
+        // Per il livello 6, riabilita le tendine e il pulsante controlla
+        var noteSelect = document.getElementById('note-select-6');
+        var alterationSelect = document.getElementById('alteration-select-6');
+        var checkButton = document.getElementById('check-answer-6');
+        
+        if (noteSelect) {
+            noteSelect.disabled = false;
+            noteSelect.style.pointerEvents = 'auto';
+            noteSelect.style.opacity = '1';
+        }
+        if (alterationSelect) {
+            alterationSelect.disabled = false;
+            alterationSelect.style.pointerEvents = 'auto';
+            alterationSelect.style.opacity = '1';
+        }
+        if (checkButton) {
+            checkButton.disabled = false;
+            checkButton.style.pointerEvents = 'auto';
+            checkButton.style.opacity = '1';
+        }
+    }
+}
+
+// Funzione per disabilitare tutti gli input di un livello completato
+function disableLevelInputs(level) {
+    console.log('Disabilito input per livello:', level);
+    
+    if (level === 1 || level === 2) {
+        // Per i livelli 1 e 2, disabilita tutti i tasti della tastiera
+        var keyboardKeys = document.querySelectorAll('.keyboard-key');
+        keyboardKeys.forEach(function(key) {
+            key.style.pointerEvents = 'none';
+            key.style.opacity = '0.5';
+        });
+    } else if (level === 3) {
+        // Per il livello 3, disabilita i pulsanti degli intervalli
+        var intervalButtons = document.querySelectorAll('#answer-buttons-3 button');
+        intervalButtons.forEach(function(button) {
+            button.disabled = true;
+            button.style.pointerEvents = 'none';
+            button.style.opacity = '0.5';
+        });
+    } else if (level === 4) {
+        // Per il livello 4, disabilita tutti i tasti della tastiera
+        var keyboardKeys = document.querySelectorAll('.keyboard-key');
+        keyboardKeys.forEach(function(key) {
+            key.style.pointerEvents = 'none';
+            key.style.opacity = '0.5';
+        });
+    } else if (level === 5) {
+        // Per il livello 5, disabilita i checkbox e il pulsante controlla
+        var checkboxes = document.querySelectorAll('#answer-buttons-5 input[type="checkbox"]');
+        var checkButton = document.getElementById('check-answer-5');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.disabled = true;
+            checkbox.style.pointerEvents = 'none';
+            checkbox.style.opacity = '0.5';
+        });
+        if (checkButton) {
+            checkButton.disabled = true;
+            checkButton.style.pointerEvents = 'none';
+            checkButton.style.opacity = '0.5';
+        }
+    } else if (level === 6) {
+        // Per il livello 6, disabilita le tendine e il pulsante controlla
+        var noteSelect = document.getElementById('note-select-6');
+        var alterationSelect = document.getElementById('alteration-select-6');
+        var checkButton = document.getElementById('check-answer-6');
+        
+        if (noteSelect) {
+            noteSelect.disabled = true;
+            noteSelect.style.pointerEvents = 'none';
+            noteSelect.style.opacity = '0.5';
+        }
+        if (alterationSelect) {
+            alterationSelect.disabled = true;
+            alterationSelect.style.pointerEvents = 'none';
+            alterationSelect.style.opacity = '0.5';
+        }
+        if (checkButton) {
+            checkButton.disabled = true;
+            checkButton.style.pointerEvents = 'none';
+            checkButton.style.opacity = '0.5';
+        }
+    }
+}
+
 // Inizio nuovo esercizio
 function startNewExercise(level) {
     if (level === 6) {
         // Livello 6: sempre 5 domande (solo 3 tonalità enarmoniche disponibili)
         exerciseTotal = 5;
     } else {
-        var countId = 'question-count-' + level;
-        exerciseTotal = parseInt(document.getElementById(countId).value);
+    var countId = 'question-count-' + level;
+    exerciseTotal = parseInt(document.getElementById(countId).value);
     }
     exerciseCount = 0;
     exerciseScore = 0;
+    levelCompleted = false;
     currentLevel = level;
+    
+    // Riabilita tutti gli input per questo livello
+    enableLevelInputs(level);
     
     var feedbackId = 'feedback-' + level;
     var feedback = document.getElementById(feedbackId);
     if (feedback) {
         feedback.className = 'feedback';
         feedback.style.display = 'none';
+        
+        // Rimuovi eventuali riepiloghi precedenti
+        var nextElement = feedback.nextSibling;
+        while (nextElement) {
+            if (nextElement.nodeType === 1 && nextElement.style && nextElement.style.backgroundColor === 'rgb(254, 226, 226)') {
+                var toRemove = nextElement;
+                nextElement = nextElement.nextSibling;
+                toRemove.parentNode.removeChild(toRemove);
+            } else {
+                nextElement = nextElement.nextSibling;
+            }
+        }
     }
     
     // Genera automaticamente la prima domanda
@@ -1902,8 +2179,8 @@ function autoStartExercise(level) {
         // Livello 6: sempre 5 domande
         var newTotal = 5;
     } else {
-        var countId = 'question-count-' + level;
-        var newTotal = parseInt(document.getElementById(countId).value);
+    var countId = 'question-count-' + level;
+    var newTotal = parseInt(document.getElementById(countId).value);
     }
     
     // Resetta sempre lo stato degli esercizi
